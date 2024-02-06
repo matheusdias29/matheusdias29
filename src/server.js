@@ -13,12 +13,18 @@ let codigoExecutado = false;
 let browser;
 let ultimaMensagemArmazenada = '';
 
-const main = async () => {
-  const venombot = await VenomBot.getInstance().init({
+const venombot = await VenomBot.getInstance().init({
     session: 'udu auto',
     headless: true,
     useChrome: false,
   });
+
+const main = async () => {
+  /* const venombot = await VenomBot.getInstance().init({
+    session: 'udu auto',
+    headless: true,
+    useChrome: false,
+  }); */
 
   const browser = await puppeteer.launch({
     headless: false,
