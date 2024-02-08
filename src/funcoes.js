@@ -11,62 +11,24 @@ export function initializeMessageHandler(venombot, browser) {
         if (message.isGroupMsg) return;
 
         async function colocarCredito() {
-            const primeiroElementoHandle = await page.$('div > div > div.modal-header > button');
-            if (primeiroElementoHandle) {
-                // Definir o tempo em milissegundos para aguardar antes do primeiro clique (por exemplo, 5000 ms = 5 segundos)
-                const tempoAguardarPrimeiroClique = 5000;
+           
+            const firstElementHandle1 = await page.$('body > header > div.header-middle.position-relative > div > nav > button');
+                    setTimeout(async () => {
+                        await firstElementHandle1.click({ button: 'left' });
 
-                // Aguardar o tempo especificado antes de clicar no primeiro elemento
-                setTimeout(async () => {
-                    try {
-                        // Clicar no primeiro elemento
-                        await primeiroElementoHandle.click();
-                        console.log("Primeiro elemento clicado com sucesso!");
+                    }, 2000);
 
-                        // Aguardar 5 segundos antes do segundo clique
-                        const tempoAguardarSegundoClique = 3000;
-                        setTimeout(async () => {
-                            // Encontrar o segundo elemento desejado
-                            const segundoElementoHandle = await page.$('body > header > div.header-middle.position-relative > div > nav > button');
-                            if (segundoElementoHandle) {
-                                try {
-                                    // Clicar no segundo elemento
-                                    await segundoElementoHandle.click();
-                                    console.log("Segundo elemento clicado com sucesso!");
+                    const secondElementHandle1 = await page.$('#navbarToggler1 > div > div > div.modal-body.overflow-auto.h-100.p-0 > ul > li.nav-item.dropdown.profile > div.dropdown-menu.dropdown-menu-right.my-account > a:nth-child(2)');
+                    setTimeout(async () => {
+                        await secondElementHandle1.click({ button: 'left' });
+                        await venombot.sendText({ to: receivedMessages[receivedMessages.length - 1].from, message: "digite o valor que vai depoisitar" });
+                        loginStep = 3;
+                    }, 3000);
 
-                                    // Aguardar 8 segundos antes do terceiro clique
-                                    const tempoAguardarTerceiroClique = 4000;
-                                    setTimeout(async () => {
-                                        // Encontrar o terceiro elemento desejado
-                                        const terceiroElementoHandle = await page.$('div > div > div.modal-body.overflow-auto.h-100.p-0 > ul > li.nav-item.dropdown.profile > div.dropdown-menu.dropdown-menu-right.my-account > a:nth-child(2)');
-                                        if (terceiroElementoHandle) {
-                                            try {
-                                                // Clicar no terceiro elemento
-                                                await terceiroElementoHandle.click();
-                                                console.log("Terceiro elemento clicado com sucesso!");
-                                                await venombot.sendText({ to: receivedMessages[receivedMessages.length - 1].from, message: "qual valor quer depositar?" });
-                                                loginStep = 3
-                                            } catch (error) {
-                                                console.error("Erro ao clicar no terceiro elemento:", error);
-                                            }
-                                        } else {
-                                            console.error("Terceiro elemento não encontrado!");
-                                        }
-                                    }, tempoAguardarTerceiroClique);
-                                } catch (error) {
-                                    console.error("Erro ao clicar no segundo elemento:", error);
-                                }
-                            } else {
-                                console.error("Segundo elemento não encontrado!");
-                            }
-                        }, tempoAguardarSegundoClique);
-                    } catch (error) {
-                        console.error("Erro ao clicar no primeiro elemento:", error);
-                    }
-                }, tempoAguardarPrimeiroClique);
-            } else {
-                console.error("Primeiro elemento não encontrado!");
-            }
+
+                    
+                
+           
         }
 
         async function verificarMensagens() {
@@ -122,7 +84,7 @@ export function initializeMessageHandler(venombot, browser) {
                 const mensagemAntes = "*seja bem vindo*";
                 const mensagemCompleta = mensagemAntes + textoExtraido;
                 await venombot.sendText({ to: receivedMessages[receivedMessages.length - 1].from, message: mensagemCompleta });
-                await verificarMensagens()
+                verificarMensagens();
                 // Envia as opções disponíveis para o cliente após enviar a mensagem com o texto extraído
                   
 
@@ -151,8 +113,13 @@ export function initializeMessageHandler(venombot, browser) {
             try {
                 const qrcodetext = await extrairqrtext(page, 'body > div > div > div.col-reset-ambos.w-clearfix.w-col.w-col-7.w-col-stack > div.bloco-qr > div.row-qr.w-row > div.col-reset-ambos.centalizar.w-col.w-col-6.w-col-small-small-stack > div.t1.codeigo-tx.oculto-desktop');
                 await venombot.sendText({ to: receivedMessages[receivedMessages.length - 1].from, message: qrcodetext });
-                /* await verificarMensagens() */
-                // Envia as opções disponíveis para o cliente após enviar a mensagem com o texto extraído
+                
+                setTimeout(async () => {
+                  await venombot.sendText({ to: receivedMessages[receivedMessages.length - 1].from, message: 'apos finalizar o pagamento digite *inicio*' }); 
+                    loginStep = 5;
+                    }), 10000;
+
+                
                   
 
 
@@ -161,7 +128,57 @@ export function initializeMessageHandler(venombot, browser) {
                 console.error("Erro ao enviar a mensagem:", error);
             }
         }
+        const mensagemChave1 = "1";
+        const mensagemChave2 = "2";
+        const mensagemChave3 = "3";
 
+        if (loginStep === 6) {
+            
+
+            if (message.body === mensagemChave1) {
+                console.log("[ PALAVRA CHAVE 1] CHAVE digitado: ", message.body);
+                await venombot.sendText({ to: receivedMessages[receivedMessages.length - 1].from, message: 'aguarde...' });
+                colocarCredito();
+
+            } else if (message.body === mensagemChave2) {
+                console.log("[ PALAVRA CHAVE 2] CHAVE digitado: ", message.body);
+                
+
+
+            } else if (message.body === mensagemChave3) {
+                console.log("[ PALAVRA CHAVE 3] CHAVE digitado: ", message.body);
+              
+
+            } else {
+                console.error("A página não está definida.");
+            }
+        }
+
+        const mensagemChave = "inicio";
+        if(loginStep === 5){
+
+        
+        
+         if (message.body === mensagemChave) {
+        
+                console.log("[ PALAVRA CHAVE ] CHAVE digitado: ", message.body);
+                await page.goto("https://uniaodosunlockers.com.br/");
+                await venombot.sendText({ to: receivedMessages[receivedMessages.length - 1].from, message: 'aguarde...' });
+                setTimeout(async () => {
+                await venombot.sendText({ to: message.from, message: "Escolha uma opção:\n1. Colocar crédito\n2. Fazer registro" });
+
+                loginStep = 6;
+
+                      }), 5000;
+                
+                // Aqui você pode prosseguir com o restante do seu código
+            } else {
+                console.error("A página não está definida.");
+            }
+        
+
+        
+    }
         if(loginStep === 4)
         {
             if(page !== undefined) await page.evaluate((mensagem) => {
@@ -180,27 +197,31 @@ export function initializeMessageHandler(venombot, browser) {
             
             
             
-            page.on('framenavigated', async frame => {
+            async function frameNavigatedHandler(frame) {
                 // Obtenha a URL atual do frame navegado
                 const novaURL1 = frame.url();
                 console.log('Nova URL:', novaURL1);
-            
+                
                 // Verifique se a URL corresponde ao que você está procurando
                 if (novaURL1.startsWith('https://app.galaxpay.com.br/uniaodosunlockers/cobranca/')) {
                     // Agora você pode clicar no elemento desejado
                     setTimeout(async () => {
-                    const elementoHandle = await frame.$('#pix > div > div.form-group.m-t-20 > div > a');
-                    if (elementoHandle) {
-                        await elementoHandle.click();
-                        console.log('Elemento clicado com sucesso!');
-                        await enviarpix()
-
-                    } else {
-                        console.error('Elemento não encontrado.');
-                    }
-                }, 15000);}
-                });
-                
+                        const elementoHandle = await frame.$('#pix > div > div.form-group.m-t-20 > div > a');
+                        if (elementoHandle) {
+                            await elementoHandle.click();
+                            console.log('Elemento clicado com sucesso!');
+                            await enviarpix()
+            
+                            // Remova o ouvinte de evento framenavigated após o clique bem-sucedido
+                            page.removeListener('framenavigated', frameNavigatedHandler);
+            
+                        } else {
+                            console.error('Elemento não encontrado.');
+                        }
+                    }, 15000);                                    
+                }
+            };
+                    page.on('framenavigated', frameNavigatedHandler);
                     await page.waitForNavigation();
                     
     
@@ -258,6 +279,16 @@ export function initializeMessageHandler(venombot, browser) {
             const novaURL = page.url();
             if (novaURL === 'https://uniaodosunlockers.com.br/main/lgin/success') {
                 await venombot.sendText({ to: receivedMessages[receivedMessages.length - 1].from, message: "Login realizado com sucesso!" });
+                const primeiroElementoHandle = await page.$('div > div > div.modal-header > button');
+            
+                setTimeout(async () => {
+                   
+                        // Clicar no primeiro elemento
+                        await primeiroElementoHandle.click();
+                        console.log("Primeiro elemento clicado com sucesso!");
+
+                    }, 3000);
+                
                 await enviarOutraMensagem4() 
                 loginStep = 0;
             } 
@@ -265,6 +296,15 @@ export function initializeMessageHandler(venombot, browser) {
                 await venombot.sendText({ to: receivedMessages[receivedMessages.length - 1].from, message: "Falha no login" });
                 loginStep = 1;
             }
+
+            setTimeout(async () => {
+                await fifthElementHandle.click({ button: 'left' });
+
+            }, 3000);
+
+
+            
+
         }
         if(loginStep === 1)
         {
