@@ -1,5 +1,6 @@
-import puppeteer from 'puppeteer';
 import { VenomBot } from './venom.js'
+import puppeteer from 'puppeteer';
+
 import { initializeMessageHandler } from './funcoes.js'
 
 
@@ -25,7 +26,7 @@ const main = async () => {
 
 
     // Inicializa o manipulador de mensagens fora da função main
-    initializeMessageHandler(venombot, browser);
+    initializeMessageHandler(venombot);
 };
 
 main();
