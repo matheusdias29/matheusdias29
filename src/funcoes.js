@@ -1,39 +1,59 @@
 import { Session } from './class/Session.js'
 import { browser } from './server.js'
 
-const users = [];
-let receivedMessages = [];
-let userStateMap = new Map();
-// Função para inicializar o manipulador de mensagens do VenomBot
+const SessionTimeout = (60 * 3) * 1000
+const users            = [];
+let   receivedMessages = [];
+let   userStateMap     = new Map();
+  // Função para inicializar o manipulador de mensagens do VenomBot
 export function initializeMessageHandler(venombot) {
     
+	async function verifyTimeoutUser(user)
+	{
+		if(user.getUserTimeout() >= 1)
+		{
+			console.log("[ INFO ] Acesso do cliente irá expirar em ", (user.getUserTimeout() - Date.now()) / 1000, " segundos");
+			if(user.getUserTimeout() < Date.now())
+			{
+				await venombot.sendText({ to: user.id, message: "Atendimento finalizado devido à falta de interação.\ndigite acessar novamente para fazer login"})
+				user.setUserTimeout(0);
+				user.setIsUserLogged(false);
+				user.browserPage.close();
+				users.pop(user);
+				return;
+			}
+		}
+		setTimeout(verifyTimeoutUser, 1000, user)
+		return;
+	}
+
     async function assignUserToSession(userNumber)
     {
-        const context = await browser.createIncognitoBrowserContext()
+        const context     = await browser.createIncognitoBrowserContext()
         const browserPage = await context.newPage()
-        const userClass = new Session(browserPage, userNumber)
+        const userClass   = new Session(browserPage, userNumber)
         users.push(userClass)
         
         await acessarPaginaDesejada(browserPage, userClass)
     }
 
-    async function acessarPaginaDesejada(currentBrowser, userClass, browserPage) {
+    async function acessarPaginaDesejada(currentBrowser, userClass) {
 
         try {
-            // URL da página desejada
+              // URL da página desejada
             const url = 'https://uniaodosunlockers.com.br/';
 
-            // Acessar a página
+              // Acessar a página
             await currentBrowser.goto(url);
 
-            // Aguarde até que o seletor específico esteja disponível na página
+              // Aguarde até que o seletor específico esteja disponível na página
             await currentBrowser.waitForSelector('span[style="box-sizing: border-box; font-weight: bolder;"]');
 
-            // Extrair o texto do elemento
+              // Extrair o texto do elemento
             const texto = await currentBrowser.$eval('span[style="box-sizing: border-box; font-weight: bolder;"]', element => element.textContent);
 
-            // Fechar o navegador após o acesso bem-sucedido
-            // await browser.close();
+              // Fechar o navegador após o acesso bem-sucedido
+              // await browser.close();
 
             const closePopupHandle = await currentBrowser.$('span.cursor-pointer.position-absolute');
             setTimeout(async () => {
@@ -55,6 +75,10 @@ export function initializeMessageHandler(venombot) {
         async function handleLoginSet() {
                 await venombot.sendText({ to: userClass.id, message: "insira o nome de usuario" });
                 userClass.setLoginStep(1);
+                userClass.setIsUserLogged(true);
+				userClass.setUserTimeout(Date.now() + SessionTimeout)
+                console.log("[ INFO ] Acesso do cliente irá expirar em ", (userClass.getUserTimeout() - Date.now()) / 1000, " segundos");
+				setTimeout(verifyTimeoutUser, 1000, userClass)
             };
 
            
@@ -95,7 +119,7 @@ export function initializeMessageHandler(venombot) {
         
         const hasAccessed = userStateMap.has(userId) && userStateMap.get(userId);
 
-        // Se o usuário não acessou, envia a mensagem de boas-vindas
+          // Se o usuário não acessou, envia a mensagem de boas-vindas
         if (!hasAccessed) {
             await venombot.sendText({ to: message.from, message: "BEM VINDO AO SERVIDOR DA UDU\npara iniciar o servidor digite *acessar*" });
         }
@@ -106,6 +130,10 @@ export function initializeMessageHandler(venombot) {
 
             if(user.id === message.from)
             {
+				if(user.isUserLogged() === true)
+				{
+					user.setUserTimeout(Date.now() + SessionTimeout)
+				}
 
                 
 
@@ -241,78 +269,143 @@ export function initializeMessageHandler(venombot) {
                         const mensagemChave6 = "6";
                         const mensagemChave7 = "7";
                         const mensagemChave8 = "8";
+                        const mensagemChave9 = "9";
+                        const mensagemChave10 = "10";
+                        const mensagemChave11 = "11";
+                        const mensagemChave12 = "12";
+                        const mensagemChave13 = "13";
+
+                        const mensagemClose = "finalizar";
 
                 if(user.getLoginStep() === 3)
-            {           
-                        
-
-                        if (message.body === mensagemChave1) {
-                            console.log("[ PALAVRA CHAVE ] CHAVE digitado: ", message.body);
-                            await venombot.sendText({ to: user.id, message: 'aguarde...' });
-                            user.setLoginStep(0);
-                            colocarCredito();
-            
-                        } else if (message.body === mensagemChave4) {
-                            console.log("[ PALAVRA CHAVE ] CHAVE digitado: ", message.body);
-                            await venombot.sendText({ to: user.id, message: 'aguarde...' });
-                            user.setLoginStep(0);
-                            iremoval();
-                        
-            
-            
-                        } else if (message.body === mensagemChave3) {
-                            console.log("[ PALAVRA CHAVE ] CHAVE digitado: ", message.body);
-                            await venombot.sendText({ to: user.id, message: 'aguarde...' });
-                            user.setLoginStep(0);
-                            ikey();
-            
-                        } else if (message.body === mensagemChave2) {
-                            console.log("[ PALAVRA CHAVE ] CHAVE digitado: ", message.body);
-                            await venombot.sendText({ to: user.id, message: 'aguarde...' });
-                            user.setLoginStep(0);
-                            HellocomSinal();
-                            await venombot.sendText({ to: user.id, message: 'Escolha uma opção:\n1- Hello com Sinal iPhone 6s/6s+/SE 1a Ger - 22.73 Crédito\n2- Hello com Sinal iPhone 7/7+ - 40.4 Crédito\n3- Hello com Sinal iPhone 8/8+ - 75.75 Crédito\n4- Hello com Sinal iPhone X - 118.68 Crédito\n ----------------- \n5- Jailbreak iKey Prime 6s ao X iOS 15/16/17 - 10 Crédito\n ----------------- \n6- Jailbreak iRemoval PRO 6s ao X iOS 15/16/17 - 10 Crédito\n ----------------- \n7- Passcode iOS 15/16 iPhone 6 ao X - 45 Crédito\n ----------------- \n8- Bypass Hello Sem Sinal iPhone 6g ao X - 45 Crédito ' }) 
-                            
-            
-                        } else if (message.body === mensagemChave5) {
-                            console.log("[ PALAVRA CHAVE ] CHAVE digitado: ", message.body);
-                            await venombot.sendText({ to: user.id, message: 'aguarde...' });
-                            user.setLoginStep(0);
-                            unlocktool();
-            
-                        } else if (message.body === mensagemChave6) {
-                            console.log("[ PALAVRA CHAVE ] CHAVE digitado: ", message.body);
-                            await venombot.sendText({ to: user.id, message: 'aguarde...' });
-                            user.setLoginStep(0);
-                            user.setPhoenixStep(1);
-                               
-                        } else if (message.body === mensagemChave7) {
-                            console.log("[ PALAVRA CHAVE ] CHAVE digitado: ", message.body);
-                            await venombot.sendText({ to: user.id, message: 'aguarde...' });
-                            user.setLoginStep(0);
-                            historico();
-                               
-                        } else if (message.body === mensagemChave8) {
-                            console.log("[ PALAVRA CHAVE ] CHAVE digitado: ", message.body);
-                            await venombot.sendText({ to: user.id, message: 'aguarde...' });
-                            user.setLoginStep(0);
-                            box();
-                               
-                        } else {
-                            await venombot.sendText({ to: user.id, message: 'opção invalida...' });
-                            console.error("A página não está definida.");
-                        }
-                        
-                };
+                    {           
+                                
+        
+                                if (message.body === mensagemChave1) {
+                                    console.log("[ PALAVRA CHAVE ] CHAVE digitado: ", message.body);
+                                    await venombot.sendText({ to: user.id, message: 'aguarde...' });
+                                    user.setLoginStep(0);
+                                    colocarCredito();
+                    
+                                } else if (message.body === mensagemChave4) {
+                                    console.log("[ PALAVRA CHAVE ] CHAVE digitado: ", message.body);
+                                    await venombot.sendText({ to: user.id, message: 'aguarde...' });
+                                    user.setLoginStep(0);
+                                    iremoval();
+                                
+                    
+                    
+                                } else if (message.body === mensagemChave3) {
+                                    console.log("[ PALAVRA CHAVE ] CHAVE digitado: ", message.body);
+                                    await venombot.sendText({ to: user.id, message: 'aguarde...' });
+                                    user.setLoginStep(0);
+                                    ikey();
+                    
+                                } else if (message.body === mensagemChave2) {
+                                    console.log("[ PALAVRA CHAVE ] CHAVE digitado: ", message.body);
+                                    await venombot.sendText({ to: user.id, message: 'aguarde...' });
+                                    user.setLoginStep(0);
+                                    HellocomSinal();
+                                    await venombot.sendText({ to: user.id, message: 'Escolha uma opção:\n1- Hello com Sinal iPhone 6s/6s+/SE 1a Ger - 22.73 Crédito\n2- Hello com Sinal iPhone 7/7+ - 40.4 Crédito\n3- Hello com Sinal iPhone 8/8+ - 75.75 Crédito\n4- Hello com Sinal iPhone X - 118.68 Crédito\n ----------------- \n5- Jailbreak iKey Prime 6s ao X iOS 15/16/17 - 10 Crédito\n ----------------- \n6- Jailbreak iRemoval PRO 6s ao X iOS 15/16/17 - 10 Crédito\n ----------------- \n7- Passcode iOS 15/16 iPhone 6 ao X - 45 Crédito\n ----------------- \n8- Bypass Hello Sem Sinal iPhone 6g ao X - 45 Crédito\n\n---digite *inicio* para voltar--- ' }) 
+                                    
+                    
+                                } else if (message.body === mensagemChave5) {
+                                    console.log("[ PALAVRA CHAVE ] CHAVE digitado: ", message.body);
+                                    await venombot.sendText({ to: user.id, message: 'aguarde...' });
+                                    user.setLoginStep(0);
+                                    unlocktool();
+                    
+                                } else if (message.body === mensagemChave6) {
+                                    console.log("[ PALAVRA CHAVE ] CHAVE digitado: ", message.body);
+                                    await venombot.sendText({ to: user.id, message: 'aguarde...' });
+                                    user.setLoginStep(0);
+                                    user.setPhoenixStep(1);
+                                       
+                                } else if (message.body === mensagemChave7) {
+                                    console.log("[ PALAVRA CHAVE ] CHAVE digitado: ", message.body);
+                                    await venombot.sendText({ to: user.id, message: 'aguarde...' });
+                                    user.setLoginStep(0);
+                                    user.setXiaomidefStep(1);
+                                       
+                                } else if (message.body === mensagemChave8) {
+                                    console.log("[ PALAVRA CHAVE ] CHAVE digitado: ", message.body);
+                                    await venombot.sendText({ to: user.id, message: 'aguarde...' });
+                                    user.setLoginStep(0);
+                                    user.setXiaomisemiStep(1);
+                                       
+                                } else if (message.body === mensagemChave9) {
+                                    console.log("[ PALAVRA CHAVE ] CHAVE digitado: ", message.body);
+                                    await venombot.sendText({ to: user.id, message: 'aguarde...' });
+                                    user.setLoginStep(0);
+                                    await samsung();
+                                       
+                                } else if (message.body === mensagemChave10) {
+                                    console.log("[ PALAVRA CHAVE ] CHAVE digitado: ", message.body);
+                                    await venombot.sendText({ to: user.id, message: 'aguarde...' });
+                                    user.setLoginStep(0);
+                                    await sam();   
+                                } else if (message.body === mensagemChave11) {
+                                    console.log("[ PALAVRA CHAVE ] CHAVE digitado: ", message.body);
+                                    await venombot.sendText({ to: user.id, message: 'aguarde...' });
+                                    user.setLoginStep(0);
+                                    historico();
+                                       
+                                } else if (message.body === mensagemChave12) {
+                                    console.log("[ PALAVRA CHAVE ] CHAVE digitado: ", message.body);
+                                    await venombot.sendText({ to: user.id, message: 'aguarde...' });
+                                    user.setLoginStep(0);
+                                    box();
+                                       
+                                } else if (message.body === mensagemChave13) {
+                                    console.log("[ PALAVRA CHAVE ] CHAVE digitado: ", message.body);
+                                    await venombot.sendText({ to: user.id, message: 'aguarde...' });
+                                    user.setLoginStep(0);
+                                    remote();
+                                       
+                                } else if (message.body.toLowerCase() === mensagemClose) {
+                                    await venombot.sendText({ to: user.id, message: "Atendimento finalizado.\ndigite *acessar* novamente"})
+                                    user.setUserTimeout(0);
+                                    user.setIsUserLogged(false);
+                                    user.browserPage.close();
+                                    users.pop(user);
+                                    return;
+                                }
+                                else {
+                                    await venombot.sendText({ to: user.id, message: 'opção invalida...' });
+                                                        await venombot.sendText({ to: user.id, message: "Escolha uma opção:\n1. *COLOCAR CRÉDITOS*\n2. *UDU FLASH TOOL*\n3. *IKEY PRIME*\n4. *IREMOVAL PRO*\n5. *ATIVAÇÃO UNLOCKTOOL*\n6. *PHOENIX FRP*\n7. *XIAOMI DEFINITIVO 165 CREDITOS*\n8. *XIAOMI SEMI DEFINITIVO (REMOTO)*\n9. *SANSUNG FRP (REMOTO)*\n10. *SAM-FRP TOOL*\n\n  ---HISTORIOCO DE PEDIDOS---  \n\n11. *SERVIÇOS VIA IMEI | SN | ECID*\n12. *LINCEÇAS DE BOX E CREDITOS*\n13. *SERVIÇOS REMOTOS*\n\n *finalizar* para encerrar sessão " });                                    console.error("A página não está definida.");
+                                }
+                        };
                 
                 const iniciocredito = "inicio";
 
                 if(user.getLoginStep() === 4)
                 {
-                    await venombot.sendText({ to: user.id, message: 'voltando ao inicio' });
-                    if (message.body === iniciocredito) {
+                    
+                    if (message.body.toLowerCase() === iniciocredito) {
+                        await venombot.sendText({ to: user.id, message: 'voltando ao inicio' });
+                        console.log("[ PALAVRA CHAVE ] CHAVE digitado: ", message.body);
+                        await user.browserPage.goto("https://uniaodosunlockers.com.br/main");
+                        const primeiroElementoHandle = await user.browserPage.$('div > div > div.modal-header > button');
+                    
+                        setTimeout(async () => {
+                        
+                                // Clicar no primeiro elemento
+                                await primeiroElementoHandle.click();
+                                console.log("Primeiro elemento clicado com sucesso!");
+                                user.setUnlockStep(0);
+                                user.setLoginStep(3);
+                                console.log("encaminhando");
 
-                        user.setLoginStep(6);
+                            }, 4000);
+
+                         setTimeout(async () => {
+                            await user.browserPage.waitForSelector('body > div.bg-gray > div > div:nth-child(3) > div.client-area > div > div > div > div > div.row > div.col-lg-8.mb-4.bottom-space > div.row > div.col-md-6.col-left > div > div.d-row > h4 > span.counter');
+    
+                            const valor = await user.browserPage.$('body > div.bg-gray > div > div:nth-child(3) > div.client-area > div > div > div > div > div.row > div.col-lg-8.mb-4.bottom-space > div.row > div.col-md-6.col-left > div > div.d-row > h4 > span.counter');
+                            const valor1 = await user.browserPage.evaluate(element => element.textContent, valor);
+                            await venombot.sendText({ to: user.id, message: 'saldo: ' + valor1 });
+                    await venombot.sendText({ to: user.id, message: "Escolha uma opção:\n1. *COLOCAR CRÉDITOS*\n2. *UDU FLASH TOOL*\n3. *IKEY PRIME*\n4. *IREMOVAL PRO*\n5. *ATIVAÇÃO UNLOCKTOOL*\n6. *PHOENIX FRP*\n7. *XIAOMI DEFINITIVO 165 CREDITOS*\n8. *XIAOMI SEMI DEFINITIVO (REMOTO)*\n9. *SANSUNG FRP (REMOTO)*\n10. *SAM-FRP TOOL*\n\n  ---HISTORIOCO DE PEDIDOS---  \n\n11. *SERVIÇOS VIA IMEI | SN | ECID*\n12. *LINCEÇAS DE BOX E CREDITOS*\n13. *SERVIÇOS REMOTOS*\n\n *finalizar* para encerrar sessão " });                        
+                        }, 1000);
                     
                     } else if (message.body !== iniciocredito) { 
                         if (user.browserPage !== undefined) await user.browserPage.evaluate((mensagem) => {
@@ -345,9 +438,31 @@ export function initializeMessageHandler(venombot) {
                 if(user.getLoginStep() === 5)
                 {
                     
-                    if (message.body === iniciocredito) {
+                    if (message.body.toLowerCase() === iniciocredito) {
                         await venombot.sendText({ to: user.id, message: 'voltando ao inicio' });
-                        user.setLoginStep(6);
+                        console.log("[ PALAVRA CHAVE ] CHAVE digitado: ", message.body);
+                        await user.browserPage.goto("https://uniaodosunlockers.com.br/main");
+                        const primeiroElementoHandle = await user.browserPage.$('div > div > div.modal-header > button');
+                    
+                        setTimeout(async () => {
+                        
+                                // Clicar no primeiro elemento
+                                await primeiroElementoHandle.click();
+                                console.log("Primeiro elemento clicado com sucesso!");
+                                user.setUnlockStep(0);
+                                user.setLoginStep(3);
+                                console.log("encaminhando");
+
+                            }, 4000);
+
+                         setTimeout(async () => {
+                            await user.browserPage.waitForSelector('body > div.bg-gray > div > div:nth-child(3) > div.client-area > div > div > div > div > div.row > div.col-lg-8.mb-4.bottom-space > div.row > div.col-md-6.col-left > div > div.d-row > h4 > span.counter');
+    
+                            const valor = await user.browserPage.$('body > div.bg-gray > div > div:nth-child(3) > div.client-area > div > div > div > div > div.row > div.col-lg-8.mb-4.bottom-space > div.row > div.col-md-6.col-left > div > div.d-row > h4 > span.counter');
+                            const valor1 = await user.browserPage.evaluate(element => element.textContent, valor);
+                            await venombot.sendText({ to: user.id, message: 'saldo: ' + valor1 });
+                            await venombot.sendText({ to: user.id, message: "Escolha uma opção:\n1. *COLOCAR CRÉDITOS*\n2. *UDU FLASH TOOL*\n3. *IKEY PRIME*\n4. *IREMOVAL PRO*\n5. *ATIVAÇÃO UNLOCKTOOL*\n6. *PHOENIX FRP*\n7. *XIAOMI DEFINITIVO 165 CREDITOS*\n8. *XIAOMI SEMI DEFINITIVO (REMOTO)*\n9. *SANSUNG FRP (REMOTO)*\n10. *SAM-FRP TOOL*\n\n  ---HISTORIOCO DE PEDIDOS---  \n\n11. *SERVIÇOS VIA IMEI | SN | ECID*\n12. *LINCEÇAS DE BOX E CREDITOS*\n13. *SERVIÇOS REMOTOS*\n\n *finalizar* para encerrar sessão " });                        
+                        }, 1000);
                     
                     } else if (message.body !== iniciocredito) {
 
@@ -419,7 +534,7 @@ export function initializeMessageHandler(venombot) {
                 if(user.getLoginStep() === 6)
                 {
                     const mensagemChave = 'inicio';
-                    if (message.body === mensagemChave) {
+                    if (message.body.toLowerCase() === mensagemChave) {
         
                         console.log("[ PALAVRA CHAVE ] CHAVE digitado: ", message.body);
                         await user.browserPage.goto("https://uniaodosunlockers.com.br/main");
@@ -441,9 +556,7 @@ export function initializeMessageHandler(venombot) {
                             const valor = await user.browserPage.$('body > div.bg-gray > div > div:nth-child(3) > div.client-area > div > div > div > div > div.row > div.col-lg-8.mb-4.bottom-space > div.row > div.col-md-6.col-left > div > div.d-row > h4 > span.counter');
                             const valor1 = await user.browserPage.evaluate(element => element.textContent, valor);
                             await venombot.sendText({ to: user.id, message: 'saldo: ' + valor1 });
-                            await venombot.sendText({ to: user.id, message: "Escolha uma opção:\n1. *COLOCAR CRÉDITOS*\n2. *UDU FLASH TOOL*\n3. *IKEY PRIME*\n4. *IREMOVAL PRO*\n5. *ATIVAÇÃO UNLOCKTOOL*\n6. *PHOENIX FRP*\n\n  ---HISTORIOCO DE PEDIDOS---  \n\n7. *SERVIÇOS VIA IMEI | SN | ECID*\n8. *LINCEÇAS DE BOX E CREDITOS* " });
-                            
-                        
+                    await venombot.sendText({ to: user.id, message: "Escolha uma opção:\n1. *COLOCAR CRÉDITOS*\n2. *UDU FLASH TOOL*\n3. *IKEY PRIME*\n4. *IREMOVAL PRO*\n5. *ATIVAÇÃO UNLOCKTOOL*\n6. *PHOENIX FRP*\n7. *XIAOMI DEFINITIVO 165 CREDITOS*\n8. *XIAOMI SEMI DEFINITIVO (REMOTO)*\n9. *SANSUNG FRP (REMOTO)*\n10. *SAM-FRP TOOL*\n\n  ---HISTORIOCO DE PEDIDOS---  \n\n11. *SERVIÇOS VIA IMEI | SN | ECID*\n12. *LINCEÇAS DE BOX E CREDITOS*\n13. *SERVIÇOS REMOTOS*\n\n *finalizar* para encerrar sessão " });                        
                         }, 1000);
                         
                         
@@ -515,8 +628,9 @@ export function initializeMessageHandler(venombot) {
                     user.setIremovalStep(2);
                     }, 3000);
                 
-                } else if (message.body === iniciocredito) {
-                    console.log("[ PALAVRA CHAVE ] CHAVE digitado: ", message.body);
+                } else if (message.body.toLowerCase() === iniciocredito) {
+                    await venombot.sendText({ to: user.id, message: 'voltando ao inicio' });
+                        console.log("[ PALAVRA CHAVE ] CHAVE digitado: ", message.body);
                         await user.browserPage.goto("https://uniaodosunlockers.com.br/main");
                         const primeiroElementoHandle = await user.browserPage.$('div > div > div.modal-header > button');
                     
@@ -525,7 +639,7 @@ export function initializeMessageHandler(venombot) {
                                 // Clicar no primeiro elemento
                                 await primeiroElementoHandle.click();
                                 console.log("Primeiro elemento clicado com sucesso!");
-                                user.setIremovalStep(0);
+                                user.setUnlockStep(0);
                                 user.setLoginStep(3);
                                 console.log("encaminhando");
 
@@ -537,9 +651,7 @@ export function initializeMessageHandler(venombot) {
                             const valor = await user.browserPage.$('body > div.bg-gray > div > div:nth-child(3) > div.client-area > div > div > div > div > div.row > div.col-lg-8.mb-4.bottom-space > div.row > div.col-md-6.col-left > div > div.d-row > h4 > span.counter');
                             const valor1 = await user.browserPage.evaluate(element => element.textContent, valor);
                             await venombot.sendText({ to: user.id, message: 'saldo: ' + valor1 });
-                            await venombot.sendText({ to: user.id, message: "Escolha uma opção:\n1. *COLOCAR CRÉDITOS*\n2. *UDU FLASH TOOL*\n3. *IKEY PRIME*\n4. *IREMOVAL PRO*\n5. *ATIVAÇÃO UNLOCKTOOL*\n6. *PHOENIX FRP*\n\n  ---HISTORIOCO DE PEDIDOS---  \n\n7. *SERVIÇOS VIA IMEI | SN | ECID*\n8. *LINCEÇAS DE BOX E CREDITOS* " });
-                            
-                        
+                    await venombot.sendText({ to: user.id, message: "Escolha uma opção:\n1. *COLOCAR CRÉDITOS*\n2. *UDU FLASH TOOL*\n3. *IKEY PRIME*\n4. *IREMOVAL PRO*\n5. *ATIVAÇÃO UNLOCKTOOL*\n6. *PHOENIX FRP*\n7. *XIAOMI DEFINITIVO 165 CREDITOS*\n8. *XIAOMI SEMI DEFINITIVO (REMOTO)*\n9. *SANSUNG FRP (REMOTO)*\n10. *SAM-FRP TOOL*\n\n  ---HISTORIOCO DE PEDIDOS---  \n\n11. *SERVIÇOS VIA IMEI | SN | ECID*\n12. *LINCEÇAS DE BOX E CREDITOS*\n13. *SERVIÇOS REMOTOS*\n\n *finalizar* para encerrar sessão " });                        
                         }, 1000);
                 
                 } 
@@ -550,6 +662,34 @@ export function initializeMessageHandler(venombot) {
 
                 if(user.getIremovalStep() === 2)
                 {
+                    
+                    if (message.body.toLowerCase() === iniciocredito) {
+                        console.log("[ PALAVRA CHAVE ] CHAVE digitado: ", message.body);
+                            await user.browserPage.goto("https://uniaodosunlockers.com.br/main");
+                            const primeiroElementoHandle = await user.browserPage.$('div > div > div.modal-header > button');
+                        
+                            setTimeout(async () => {
+                            
+                                    // Clicar no primeiro elemento
+                                    await primeiroElementoHandle.click();
+                                    console.log("Primeiro elemento clicado com sucesso!");
+                                    user.setIremovalStep(0);
+                                    user.setLoginStep(3);
+                                    console.log("encaminhando");
+    
+                                }, 4000);
+    
+                             setTimeout(async () => {
+                                await user.browserPage.waitForSelector('body > div.bg-gray > div > div:nth-child(3) > div.client-area > div > div > div > div > div.row > div.col-lg-8.mb-4.bottom-space > div.row > div.col-md-6.col-left > div > div.d-row > h4 > span.counter');
+        
+                                const valor = await user.browserPage.$('body > div.bg-gray > div > div:nth-child(3) > div.client-area > div > div > div > div > div.row > div.col-lg-8.mb-4.bottom-space > div.row > div.col-md-6.col-left > div > div.d-row > h4 > span.counter');
+                                const valor1 = await user.browserPage.evaluate(element => element.textContent, valor);
+                                await venombot.sendText({ to: user.id, message: 'saldo: ' + valor1 });
+                                                    await venombot.sendText({ to: user.id, message: "Escolha uma opção:\n1. *COLOCAR CRÉDITOS*\n2. *UDU FLASH TOOL*\n3. *IKEY PRIME*\n4. *IREMOVAL PRO*\n5. *ATIVAÇÃO UNLOCKTOOL*\n6. *PHOENIX FRP*\n7. *XIAOMI DEFINITIVO 165 CREDITOS*\n8. *XIAOMI SEMI DEFINITIVO (REMOTO)*\n9. *SANSUNG FRP (REMOTO)*\n10. *SAM-FRP TOOL*\n\n  ---HISTORIOCO DE PEDIDOS---  \n\n11. *SERVIÇOS VIA IMEI | SN | ECID*\n12. *LINCEÇAS DE BOX E CREDITOS*\n13. *SERVIÇOS REMOTOS*\n\n *finalizar* para encerrar sessão " });                                
+                            
+                            }, 1000);
+                    
+                    } else if (message.body !== iniciocredito) {
                     const userFieldHandle = await user.browserPage.$('#imei_custom')
                     setTimeout(async () => {
                         await userFieldHandle.type(message.body)
@@ -559,7 +699,7 @@ export function initializeMessageHandler(venombot) {
                         
                         
                     }, 1000)
-                    
+                }
                     
 
                     
@@ -587,6 +727,7 @@ export function initializeMessageHandler(venombot) {
                         await venombot.sendText({ to: user.id, message: 'aguarde...' });
                         await venombot.sendText({ to: user.id, message: 'insira o serial do aparelo.' });
                         setTimeout(async () => {
+                            user.setIkeyStep(0);
                             user.setIkeyStep(2);
                             }, 3000);
         
@@ -599,6 +740,7 @@ export function initializeMessageHandler(venombot) {
                         await venombot.sendText({ to: user.id, message: 'aguarde...' });
                         await venombot.sendText({ to: user.id, message: 'insira o serial do aparelo.' });
                         setTimeout(async () => {
+                            user.setIkeyStep(0);
                             user.setIkeyStep(2);
                             }, 3000);
         
@@ -609,6 +751,7 @@ export function initializeMessageHandler(venombot) {
                         await venombot.sendText({ to: user.id, message: 'aguarde...' });
                         await venombot.sendText({ to: user.id, message: 'insira o serial do aparelo.' });
                         setTimeout(async () => {
+                            user.setIkeyStep(0);
                             user.setIkeyStep(2);
                             }, 3000);
                         
@@ -619,6 +762,7 @@ export function initializeMessageHandler(venombot) {
                         await venombot.sendText({ to: user.id, message: 'aguarde...' });
                         await venombot.sendText({ to: user.id, message: 'insira o serial do aparelo.' });
                         setTimeout(async () => {
+                            user.setIkeyStep(0);
                             user.setIkeyStep(2);
                             }, 3000);
                         
@@ -628,6 +772,7 @@ export function initializeMessageHandler(venombot) {
                         await venombot.sendText({ to: user.id, message: 'aguarde...' });
                         await venombot.sendText({ to: user.id, message: 'insira o serial do aparelo.' });
                         setTimeout(async () => {
+                            user.setIkeyStep(0);
                             user.setIkeyStep(2);
                             }, 3000);
         
@@ -637,6 +782,7 @@ export function initializeMessageHandler(venombot) {
                         await venombot.sendText({ to: user.id, message: 'aguarde...' });
                         await venombot.sendText({ to: user.id, message: 'insira o serial do aparelo.' });
                         setTimeout(async () => {
+                            user.setIkeyStep(0);
                             user.setIkeyStep(2);
                             }, 3000);
         
@@ -646,6 +792,7 @@ export function initializeMessageHandler(venombot) {
                         await venombot.sendText({ to: user.id, message: 'aguarde...' });
                         await venombot.sendText({ to: user.id, message: 'insira o serial do aparelo.' });
                         setTimeout(async () => {
+                            user.setIkeyStep(0);
                             user.setIkeyStep(2);
                             }, 3000);
         
@@ -655,10 +802,43 @@ export function initializeMessageHandler(venombot) {
                         await venombot.sendText({ to: user.id, message: 'aguarde...' });
                         await venombot.sendText({ to: user.id, message: 'insira o serial do aparelo.' });
                         setTimeout(async () => {
+                            user.setIkeyStep(0);
                             user.setIkeyStep(2);
                             }, 3000);
         
-                    } else if (message.body === iniciocredito) {
+                    } else if (message.body.toLowerCase() === iniciocredito) {
+                        await venombot.sendText({ to: user.id, message: 'voltando ao inicio' });
+                        console.log("[ PALAVRA CHAVE ] CHAVE digitado: ", message.body);
+                        await user.browserPage.goto("https://uniaodosunlockers.com.br/main");
+                        const primeiroElementoHandle = await user.browserPage.$('div > div > div.modal-header > button');
+                    
+                        setTimeout(async () => {
+                        
+                                // Clicar no primeiro elemento
+                                await primeiroElementoHandle.click();
+                                console.log("Primeiro elemento clicado com sucesso!");
+                                user.setUnlockStep(0);
+                                user.setLoginStep(3);
+                                console.log("encaminhando");
+
+                            }, 4000);
+
+                         setTimeout(async () => {
+                            await user.browserPage.waitForSelector('body > div.bg-gray > div > div:nth-child(3) > div.client-area > div > div > div > div > div.row > div.col-lg-8.mb-4.bottom-space > div.row > div.col-md-6.col-left > div > div.d-row > h4 > span.counter');
+    
+                            const valor = await user.browserPage.$('body > div.bg-gray > div > div:nth-child(3) > div.client-area > div > div > div > div > div.row > div.col-lg-8.mb-4.bottom-space > div.row > div.col-md-6.col-left > div > div.d-row > h4 > span.counter');
+                            const valor1 = await user.browserPage.evaluate(element => element.textContent, valor);
+                            await venombot.sendText({ to: user.id, message: 'saldo: ' + valor1 });
+                    await venombot.sendText({ to: user.id, message: "Escolha uma opção:\n1. *COLOCAR CRÉDITOS*\n2. *UDU FLASH TOOL*\n3. *IKEY PRIME*\n4. *IREMOVAL PRO*\n5. *ATIVAÇÃO UNLOCKTOOL*\n6. *PHOENIX FRP*\n7. *XIAOMI DEFINITIVO 165 CREDITOS*\n8. *XIAOMI SEMI DEFINITIVO (REMOTO)*\n9. *SANSUNG FRP (REMOTO)*\n10. *SAM-FRP TOOL*\n\n  ---HISTORIOCO DE PEDIDOS---  \n\n11. *SERVIÇOS VIA IMEI | SN | ECID*\n12. *LINCEÇAS DE BOX E CREDITOS*\n13. *SERVIÇOS REMOTOS*\n\n *finalizar* para encerrar sessão " });                        
+                        }, 1000);
+                    
+                    }
+
+                }
+
+                if(user.getIkeyStep() === 2){
+                    
+                    if (message.body.toLowerCase() === iniciocredito) {
                         console.log("[ PALAVRA CHAVE ] CHAVE digitado: ", message.body);
                             await user.browserPage.goto("https://uniaodosunlockers.com.br/main");
                             const primeiroElementoHandle = await user.browserPage.$('div > div > div.modal-header > button');
@@ -680,16 +860,11 @@ export function initializeMessageHandler(venombot) {
                                 const valor = await user.browserPage.$('body > div.bg-gray > div > div:nth-child(3) > div.client-area > div > div > div > div > div.row > div.col-lg-8.mb-4.bottom-space > div.row > div.col-md-6.col-left > div > div.d-row > h4 > span.counter');
                                 const valor1 = await user.browserPage.evaluate(element => element.textContent, valor);
                                 await venombot.sendText({ to: user.id, message: 'saldo: ' + valor1 });
-                                await venombot.sendText({ to: user.id, message: "Escolha uma opção:\n1. *COLOCAR CRÉDITOS*\n2. *UDU FLASH TOOL*\n3. *IKEY PRIME*\n4. *IREMOVAL PRO*\n5. *ATIVAÇÃO UNLOCKTOOL*\n6. *PHOENIX FRP*\n\n  ---HISTORIOCO DE PEDIDOS---  \n\n7. *SERVIÇOS VIA IMEI | SN | ECID*\n8. *LINCEÇAS DE BOX E CREDITOS* " });
-                                
+                                                    await venombot.sendText({ to: user.id, message: "Escolha uma opção:\n1. *COLOCAR CRÉDITOS*\n2. *UDU FLASH TOOL*\n3. *IKEY PRIME*\n4. *IREMOVAL PRO*\n5. *ATIVAÇÃO UNLOCKTOOL*\n6. *PHOENIX FRP*\n7. *XIAOMI DEFINITIVO 165 CREDITOS*\n8. *XIAOMI SEMI DEFINITIVO (REMOTO)*\n9. *SANSUNG FRP (REMOTO)*\n10. *SAM-FRP TOOL*\n\n  ---HISTORIOCO DE PEDIDOS---  \n\n11. *SERVIÇOS VIA IMEI | SN | ECID*\n12. *LINCEÇAS DE BOX E CREDITOS*\n13. *SERVIÇOS REMOTOS*\n\n *finalizar* para encerrar sessão " });                                
                             
                             }, 1000);
                     
-                    }
-
-                }
-
-                if(user.getIkeyStep() === 2){
+                    } else if (message.body !== iniciocredito){
                     const userFieldHandle = await user.browserPage.$('#imei_custom')
                     setTimeout(async () => {
                         await userFieldHandle.type(message.body)
@@ -700,7 +875,7 @@ export function initializeMessageHandler(venombot) {
                         
                     }, 1000)
                     
-                    
+                }
                 
                 }
 
@@ -794,41 +969,8 @@ export function initializeMessageHandler(venombot) {
                             user.setHelloStep(2);
                             }, 3000);
                         
-                    } else if (message.body === iniciocredito) {
-                        console.log("[ PALAVRA CHAVE ] CHAVE digitado: ", message.body);
-                            await user.browserPage.goto("https://uniaodosunlockers.com.br/main");
-                            const primeiroElementoHandle = await user.browserPage.$('div > div > div.modal-header > button');
-                        
-                            setTimeout(async () => {
-                            
-                                    // Clicar no primeiro elemento
-                                    await primeiroElementoHandle.click();
-                                    console.log("Primeiro elemento clicado com sucesso!");
-                                    user.setHelloStep(0);
-                                    user.setLoginStep(3);
-                                    console.log("encaminhando");
-    
-                                }, 4000);
-    
-                             setTimeout(async () => {
-                                await user.browserPage.waitForSelector('body > div.bg-gray > div > div:nth-child(3) > div.client-area > div > div > div > div > div.row > div.col-lg-8.mb-4.bottom-space > div.row > div.col-md-6.col-left > div > div.d-row > h4 > span.counter');
-        
-                                const valor = await user.browserPage.$('body > div.bg-gray > div > div:nth-child(3) > div.client-area > div > div > div > div > div.row > div.col-lg-8.mb-4.bottom-space > div.row > div.col-md-6.col-left > div > div.d-row > h4 > span.counter');
-                                const valor1 = await user.browserPage.evaluate(element => element.textContent, valor);
-                                await venombot.sendText({ to: user.id, message: 'saldo: ' + valor1 });
-                                await venombot.sendText({ to: user.id, message: "Escolha uma opção:\n1. *COLOCAR CRÉDITOS*\n2. *UDU FLASH TOOL*\n3. *IKEY PRIME*\n4. *IREMOVAL PRO*\n5. *ATIVAÇÃO UNLOCKTOOL*\n6. *PHOENIX FRP*\n\n  ---HISTORIOCO DE PEDIDOS---  \n\n7. *SERVIÇOS VIA IMEI | SN | ECID*\n8. *LINCEÇAS DE BOX E CREDITOS* " });
-                                
-                            
-                            }, 1000);
-                    
-                    }
-                }
-
-                if(user.getHelloStep() === 2){
-
-                    await venombot.sendText({ to: user.id, message: 'voltando ao inicio' });
-                    if (message.body === iniciocredito) {
-
+                    } else if (message.body.toLowerCase() === iniciocredito) {
+                        await venombot.sendText({ to: user.id, message: 'voltando ao inicio' });
                         console.log("[ PALAVRA CHAVE ] CHAVE digitado: ", message.body);
                         await user.browserPage.goto("https://uniaodosunlockers.com.br/main");
                         const primeiroElementoHandle = await user.browserPage.$('div > div > div.modal-header > button');
@@ -838,7 +980,7 @@ export function initializeMessageHandler(venombot) {
                                 // Clicar no primeiro elemento
                                 await primeiroElementoHandle.click();
                                 console.log("Primeiro elemento clicado com sucesso!");
-                                user.setunlockStep(0);
+                                user.setUnlockStep(0);
                                 user.setLoginStep(3);
                                 console.log("encaminhando");
 
@@ -850,9 +992,38 @@ export function initializeMessageHandler(venombot) {
                             const valor = await user.browserPage.$('body > div.bg-gray > div > div:nth-child(3) > div.client-area > div > div > div > div > div.row > div.col-lg-8.mb-4.bottom-space > div.row > div.col-md-6.col-left > div > div.d-row > h4 > span.counter');
                             const valor1 = await user.browserPage.evaluate(element => element.textContent, valor);
                             await venombot.sendText({ to: user.id, message: 'saldo: ' + valor1 });
-                            await venombot.sendText({ to: user.id, message: "Escolha uma opção:\n1. *COLOCAR CRÉDITOS*\n2. *UDU FLASH TOOL*\n3. *IKEY PRIME*\n4. *IREMOVAL PRO*\n5. *ATIVAÇÃO UNLOCKTOOL*\n6. *PHOENIX FRP*\n\n  ---HISTORIOCO DE PEDIDOS---  \n\n7. *SERVIÇOS VIA IMEI | SN | ECID*\n8. *LINCEÇAS DE BOX E CREDITOS* " });
-                            
+                    await venombot.sendText({ to: user.id, message: "Escolha uma opção:\n1. *COLOCAR CRÉDITOS*\n2. *UDU FLASH TOOL*\n3. *IKEY PRIME*\n4. *IREMOVAL PRO*\n5. *ATIVAÇÃO UNLOCKTOOL*\n6. *PHOENIX FRP*\n7. *XIAOMI DEFINITIVO 165 CREDITOS*\n8. *XIAOMI SEMI DEFINITIVO (REMOTO)*\n9. *SANSUNG FRP (REMOTO)*\n10. *SAM-FRP TOOL*\n\n  ---HISTORIOCO DE PEDIDOS---  \n\n11. *SERVIÇOS VIA IMEI | SN | ECID*\n12. *LINCEÇAS DE BOX E CREDITOS*\n13. *SERVIÇOS REMOTOS*\n\n *finalizar* para encerrar sessão " });                        
+                        }, 1000);
+                    
+                    }
+                }
+
+                if(user.getHelloStep() === 2){
+
+                    
+                    if (message.body.toLowerCase() === iniciocredito) {
+                        console.log("[ PALAVRA CHAVE ] CHAVE digitado: ", message.body);
+                        await user.browserPage.goto("https://uniaodosunlockers.com.br/main");
+                        const primeiroElementoHandle = await user.browserPage.$('div > div > div.modal-header > button');
+                    
+                        setTimeout(async () => {
                         
+                                // Clicar no primeiro elemento
+                                await primeiroElementoHandle.click();
+                                console.log("Primeiro elemento clicado com sucesso!");
+                                user.setHelloStep(0);
+                                user.setLoginStep(3);
+                                console.log("encaminhando");
+
+                            }, 4000);
+
+                         setTimeout(async () => {
+                            await user.browserPage.waitForSelector('body > div.bg-gray > div > div:nth-child(3) > div.client-area > div > div > div > div > div.row > div.col-lg-8.mb-4.bottom-space > div.row > div.col-md-6.col-left > div > div.d-row > h4 > span.counter');
+    
+                            const valor = await user.browserPage.$('body > div.bg-gray > div > div:nth-child(3) > div.client-area > div > div > div > div > div.row > div.col-lg-8.mb-4.bottom-space > div.row > div.col-md-6.col-left > div > div.d-row > h4 > span.counter');
+                            const valor1 = await user.browserPage.evaluate(element => element.textContent, valor);
+                            await venombot.sendText({ to: user.id, message: 'saldo: ' + valor1 });
+                    await venombot.sendText({ to: user.id, message: "Escolha uma opção:\n1. *COLOCAR CRÉDITOS*\n2. *UDU FLASH TOOL*\n3. *IKEY PRIME*\n4. *IREMOVAL PRO*\n5. *ATIVAÇÃO UNLOCKTOOL*\n6. *PHOENIX FRP*\n7. *XIAOMI DEFINITIVO 165 CREDITOS*\n8. *XIAOMI SEMI DEFINITIVO (REMOTO)*\n9. *SANSUNG FRP (REMOTO)*\n10. *SAM-FRP TOOL*\n\n  ---HISTORIOCO DE PEDIDOS---  \n\n11. *SERVIÇOS VIA IMEI | SN | ECID*\n12. *LINCEÇAS DE BOX E CREDITOS*\n13. *SERVIÇOS REMOTOS*\n\n *finalizar* para encerrar sessão " });                        
                         }, 1000);
                     
                     } else if (message.body !== iniciocredito) {
@@ -913,42 +1084,8 @@ export function initializeMessageHandler(venombot) {
                             }, 3000);
                         
         
-                    } else if (message.body === iniciocredito) {
-                        console.log("[ PALAVRA CHAVE ] CHAVE digitado: ", message.body);
-                            await user.browserPage.goto("https://uniaodosunlockers.com.br/main");
-                            const primeiroElementoHandle = await user.browserPage.$('div > div > div.modal-header > button');
-                        
-                            setTimeout(async () => {
-                            
-                                    // Clicar no primeiro elemento
-                                    await primeiroElementoHandle.click();
-                                    console.log("Primeiro elemento clicado com sucesso!");
-                                    user.setUnlockStep(0);
-                                    user.setLoginStep(3);
-                                    console.log("encaminhando");
-    
-                                }, 4000);
-    
-                             setTimeout(async () => {
-                                await user.browserPage.waitForSelector('body > div.bg-gray > div > div:nth-child(3) > div.client-area > div > div > div > div > div.row > div.col-lg-8.mb-4.bottom-space > div.row > div.col-md-6.col-left > div > div.d-row > h4 > span.counter');
-        
-                                const valor = await user.browserPage.$('body > div.bg-gray > div > div:nth-child(3) > div.client-area > div > div > div > div > div.row > div.col-lg-8.mb-4.bottom-space > div.row > div.col-md-6.col-left > div > div.d-row > h4 > span.counter');
-                                const valor1 = await user.browserPage.evaluate(element => element.textContent, valor);
-                                await venombot.sendText({ to: user.id, message: 'saldo: ' + valor1 });
-                                await venombot.sendText({ to: user.id, message: "Escolha uma opção:\n1. *COLOCAR CRÉDITOS*\n2. *UDU FLASH TOOL*\n3. *IKEY PRIME*\n4. *IREMOVAL PRO*\n5. *ATIVAÇÃO UNLOCKTOOL*\n6. *PHOENIX FRP*\n\n  ---HISTORIOCO DE PEDIDOS---  \n\n7. *SERVIÇOS VIA IMEI | SN | ECID*\n8. *LINCEÇAS DE BOX E CREDITOS* " });
-                                
-                            
-                            }, 1000);
-                    
-                    }
-                }
-
-                if(user.getUnlockStep() === 2){
-
-                    
-                    await venombot.sendText({ to: user.id, message: 'voltando ao inicio' });
-                    if (message.body === iniciocredito) {
-
+                    } else if (message.body.toLowerCase() === iniciocredito) {
+                        await venombot.sendText({ to: user.id, message: 'voltando ao inicio' });
                         console.log("[ PALAVRA CHAVE ] CHAVE digitado: ", message.body);
                         await user.browserPage.goto("https://uniaodosunlockers.com.br/main");
                         const primeiroElementoHandle = await user.browserPage.$('div > div > div.modal-header > button');
@@ -970,9 +1107,40 @@ export function initializeMessageHandler(venombot) {
                             const valor = await user.browserPage.$('body > div.bg-gray > div > div:nth-child(3) > div.client-area > div > div > div > div > div.row > div.col-lg-8.mb-4.bottom-space > div.row > div.col-md-6.col-left > div > div.d-row > h4 > span.counter');
                             const valor1 = await user.browserPage.evaluate(element => element.textContent, valor);
                             await venombot.sendText({ to: user.id, message: 'saldo: ' + valor1 });
-                            await venombot.sendText({ to: user.id, message: "Escolha uma opção:\n1. *COLOCAR CRÉDITOS*\n2. *UDU FLASH TOOL*\n3. *IKEY PRIME*\n4. *IREMOVAL PRO*\n5. *ATIVAÇÃO UNLOCKTOOL*\n6. *PHOENIX FRP*\n\n  ---HISTORIOCO DE PEDIDOS---  \n\n7. *SERVIÇOS VIA IMEI | SN | ECID*\n8. *LINCEÇAS DE BOX E CREDITOS* " });
-                            
+                    await venombot.sendText({ to: user.id, message: "Escolha uma opção:\n1. *COLOCAR CRÉDITOS*\n2. *UDU FLASH TOOL*\n3. *IKEY PRIME*\n4. *IREMOVAL PRO*\n5. *ATIVAÇÃO UNLOCKTOOL*\n6. *PHOENIX FRP*\n7. *XIAOMI DEFINITIVO 165 CREDITOS*\n8. *XIAOMI SEMI DEFINITIVO (REMOTO)*\n9. *SANSUNG FRP (REMOTO)*\n10. *SAM-FRP TOOL*\n\n  ---HISTORIOCO DE PEDIDOS---  \n\n11. *SERVIÇOS VIA IMEI | SN | ECID*\n12. *LINCEÇAS DE BOX E CREDITOS*\n13. *SERVIÇOS REMOTOS*\n\n *finalizar* para encerrar sessão " });                        
+                        }, 1000);
+                    
+                    }
+                }
+
+                if(user.getUnlockStep() === 2){
+
+                    
+                    
+                    if (message.body.toLowerCase() === iniciocredito) {
+                        await venombot.sendText({ to: user.id, message: 'voltando ao inicio' });
+                        console.log("[ PALAVRA CHAVE ] CHAVE digitado: ", message.body);
+                        await user.browserPage.goto("https://uniaodosunlockers.com.br/main");
+                        const primeiroElementoHandle = await user.browserPage.$('div > div > div.modal-header > button');
+                    
+                        setTimeout(async () => {
                         
+                                // Clicar no primeiro elemento
+                                await primeiroElementoHandle.click();
+                                console.log("Primeiro elemento clicado com sucesso!");
+                                user.setUnlockStep(0);
+                                user.setLoginStep(3);
+                                console.log("encaminhando");
+
+                            }, 4000);
+
+                         setTimeout(async () => {
+                            await user.browserPage.waitForSelector('body > div.bg-gray > div > div:nth-child(3) > div.client-area > div > div > div > div > div.row > div.col-lg-8.mb-4.bottom-space > div.row > div.col-md-6.col-left > div > div.d-row > h4 > span.counter');
+    
+                            const valor = await user.browserPage.$('body > div.bg-gray > div > div:nth-child(3) > div.client-area > div > div > div > div > div.row > div.col-lg-8.mb-4.bottom-space > div.row > div.col-md-6.col-left > div > div.d-row > h4 > span.counter');
+                            const valor1 = await user.browserPage.evaluate(element => element.textContent, valor);
+                            await venombot.sendText({ to: user.id, message: 'saldo: ' + valor1 });
+                    await venombot.sendText({ to: user.id, message: "Escolha uma opção:\n1. *COLOCAR CRÉDITOS*\n2. *UDU FLASH TOOL*\n3. *IKEY PRIME*\n4. *IREMOVAL PRO*\n5. *ATIVAÇÃO UNLOCKTOOL*\n6. *PHOENIX FRP*\n7. *XIAOMI DEFINITIVO 165 CREDITOS*\n8. *XIAOMI SEMI DEFINITIVO (REMOTO)*\n9. *SANSUNG FRP (REMOTO)*\n10. *SAM-FRP TOOL*\n\n  ---HISTORIOCO DE PEDIDOS---  \n\n11. *SERVIÇOS VIA IMEI | SN | ECID*\n12. *LINCEÇAS DE BOX E CREDITOS*\n13. *SERVIÇOS REMOTOS*\n\n *finalizar* para encerrar sessão " });                        
                         }, 1000);
                     
                     } else if (message.body !== iniciocredito) {
@@ -991,9 +1159,9 @@ export function initializeMessageHandler(venombot) {
 
                 if(user.getUnlockStep() === 3){
 
-                    await venombot.sendText({ to: user.id, message: 'voltando ao inicio' });
-                    if (message.body === iniciocredito) {
-
+                    
+                    if (message.body.toLowerCase() === iniciocredito) {
+                        await venombot.sendText({ to: user.id, message: 'voltando ao inicio' });
                         console.log("[ PALAVRA CHAVE ] CHAVE digitado: ", message.body);
                         await user.browserPage.goto("https://uniaodosunlockers.com.br/main");
                         const primeiroElementoHandle = await user.browserPage.$('div > div > div.modal-header > button');
@@ -1015,9 +1183,7 @@ export function initializeMessageHandler(venombot) {
                             const valor = await user.browserPage.$('body > div.bg-gray > div > div:nth-child(3) > div.client-area > div > div > div > div > div.row > div.col-lg-8.mb-4.bottom-space > div.row > div.col-md-6.col-left > div > div.d-row > h4 > span.counter');
                             const valor1 = await user.browserPage.evaluate(element => element.textContent, valor);
                             await venombot.sendText({ to: user.id, message: 'saldo: ' + valor1 });
-                            await venombot.sendText({ to: user.id, message: "Escolha uma opção:\n1. *COLOCAR CRÉDITOS*\n2. *UDU FLASH TOOL*\n3. *IKEY PRIME*\n4. *IREMOVAL PRO*\n5. *ATIVAÇÃO UNLOCKTOOL*\n6. *PHOENIX FRP*\n\n  ---HISTORIOCO DE PEDIDOS---  \n\n7. *SERVIÇOS VIA IMEI | SN | ECID*\n8. *LINCEÇAS DE BOX E CREDITOS* " });
-                            
-                        
+                    await venombot.sendText({ to: user.id, message: "Escolha uma opção:\n1. *COLOCAR CRÉDITOS*\n2. *UDU FLASH TOOL*\n3. *IKEY PRIME*\n4. *IREMOVAL PRO*\n5. *ATIVAÇÃO UNLOCKTOOL*\n6. *PHOENIX FRP*\n7. *XIAOMI DEFINITIVO 165 CREDITOS*\n8. *XIAOMI SEMI DEFINITIVO (REMOTO)*\n9. *SANSUNG FRP (REMOTO)*\n10. *SAM-FRP TOOL*\n\n  ---HISTORIOCO DE PEDIDOS---  \n\n11. *SERVIÇOS VIA IMEI | SN | ECID*\n12. *LINCEÇAS DE BOX E CREDITOS*\n13. *SERVIÇOS REMOTOS*\n\n *finalizar* para encerrar sessão " });                        
                         }, 1000);
                     
                     } else if (message.body !== iniciocredito) {
@@ -1035,9 +1201,9 @@ export function initializeMessageHandler(venombot) {
 
                 if(user.getUnlockStep() === 4){
 
-                    await venombot.sendText({ to: user.id, message: 'voltando ao inicio' });
-                    if (message.body === iniciocredito) {
-
+                    
+                    if (message.body.toLowerCase() === iniciocredito) {
+                        await venombot.sendText({ to: user.id, message: 'voltando ao inicio' });
                         console.log("[ PALAVRA CHAVE ] CHAVE digitado: ", message.body);
                         await user.browserPage.goto("https://uniaodosunlockers.com.br/main");
                         const primeiroElementoHandle = await user.browserPage.$('div > div > div.modal-header > button');
@@ -1059,9 +1225,7 @@ export function initializeMessageHandler(venombot) {
                             const valor = await user.browserPage.$('body > div.bg-gray > div > div:nth-child(3) > div.client-area > div > div > div > div > div.row > div.col-lg-8.mb-4.bottom-space > div.row > div.col-md-6.col-left > div > div.d-row > h4 > span.counter');
                             const valor1 = await user.browserPage.evaluate(element => element.textContent, valor);
                             await venombot.sendText({ to: user.id, message: 'saldo: ' + valor1 });
-                            await venombot.sendText({ to: user.id, message: "Escolha uma opção:\n1. *COLOCAR CRÉDITOS*\n2. *UDU FLASH TOOL*\n3. *IKEY PRIME*\n4. *IREMOVAL PRO*\n5. *ATIVAÇÃO UNLOCKTOOL*\n6. *PHOENIX FRP*\n\n  ---HISTORIOCO DE PEDIDOS---  \n\n7. *SERVIÇOS VIA IMEI | SN | ECID*\n8. *LINCEÇAS DE BOX E CREDITOS* " });
-                            
-                        
+                    await venombot.sendText({ to: user.id, message: "Escolha uma opção:\n1. *COLOCAR CRÉDITOS*\n2. *UDU FLASH TOOL*\n3. *IKEY PRIME*\n4. *IREMOVAL PRO*\n5. *ATIVAÇÃO UNLOCKTOOL*\n6. *PHOENIX FRP*\n7. *XIAOMI DEFINITIVO 165 CREDITOS*\n8. *XIAOMI SEMI DEFINITIVO (REMOTO)*\n9. *SANSUNG FRP (REMOTO)*\n10. *SAM-FRP TOOL*\n\n  ---HISTORIOCO DE PEDIDOS---  \n\n11. *SERVIÇOS VIA IMEI | SN | ECID*\n12. *LINCEÇAS DE BOX E CREDITOS*\n13. *SERVIÇOS REMOTOS*\n\n *finalizar* para encerrar sessão " });                        
                         }, 1000);
                     
                     } else if (message.body !== iniciocredito) {
@@ -1079,9 +1243,9 @@ export function initializeMessageHandler(venombot) {
 
                 if(user.getUnlockStep() === 5){
 
-                    await venombot.sendText({ to: user.id, message: 'voltando ao inicio' });
-                    if (message.body === iniciocredito) {
-
+                    
+                    if (message.body.toLowerCase() === iniciocredito) {
+                        await venombot.sendText({ to: user.id, message: 'voltando ao inicio' });
                         console.log("[ PALAVRA CHAVE ] CHAVE digitado: ", message.body);
                         await user.browserPage.goto("https://uniaodosunlockers.com.br/main");
                         const primeiroElementoHandle = await user.browserPage.$('div > div > div.modal-header > button');
@@ -1103,9 +1267,7 @@ export function initializeMessageHandler(venombot) {
                             const valor = await user.browserPage.$('body > div.bg-gray > div > div:nth-child(3) > div.client-area > div > div > div > div > div.row > div.col-lg-8.mb-4.bottom-space > div.row > div.col-md-6.col-left > div > div.d-row > h4 > span.counter');
                             const valor1 = await user.browserPage.evaluate(element => element.textContent, valor);
                             await venombot.sendText({ to: user.id, message: 'saldo: ' + valor1 });
-                            await venombot.sendText({ to: user.id, message: "Escolha uma opção:\n1. *COLOCAR CRÉDITOS*\n2. *UDU FLASH TOOL*\n3. *IKEY PRIME*\n4. *IREMOVAL PRO*\n5. *ATIVAÇÃO UNLOCKTOOL*\n6. *PHOENIX FRP*\n\n  ---HISTORIOCO DE PEDIDOS---  \n\n7. *SERVIÇOS VIA IMEI | SN | ECID*\n8. *LINCEÇAS DE BOX E CREDITOS* " });
-                            
-                        
+                    await venombot.sendText({ to: user.id, message: "Escolha uma opção:\n1. *COLOCAR CRÉDITOS*\n2. *UDU FLASH TOOL*\n3. *IKEY PRIME*\n4. *IREMOVAL PRO*\n5. *ATIVAÇÃO UNLOCKTOOL*\n6. *PHOENIX FRP*\n7. *XIAOMI DEFINITIVO 165 CREDITOS*\n8. *XIAOMI SEMI DEFINITIVO (REMOTO)*\n9. *SANSUNG FRP (REMOTO)*\n10. *SAM-FRP TOOL*\n\n  ---HISTORIOCO DE PEDIDOS---  \n\n11. *SERVIÇOS VIA IMEI | SN | ECID*\n12. *LINCEÇAS DE BOX E CREDITOS*\n13. *SERVIÇOS REMOTOS*\n\n *finalizar* para encerrar sessão " });                        
                         }, 1000);
                     
                     } else if (message.body !== iniciocredito) {
@@ -1123,9 +1285,9 @@ export function initializeMessageHandler(venombot) {
 
                 if(user.getUnlockStep() === 6){
 
-                    await venombot.sendText({ to: user.id, message: 'voltando ao inicio' });
-                    if (message.body === iniciocredito) {
-
+                    
+                    if (message.body.toLowerCase() === iniciocredito) {
+                        await venombot.sendText({ to: user.id, message: 'voltando ao inicio' });
                         console.log("[ PALAVRA CHAVE ] CHAVE digitado: ", message.body);
                         await user.browserPage.goto("https://uniaodosunlockers.com.br/main");
                         const primeiroElementoHandle = await user.browserPage.$('div > div > div.modal-header > button');
@@ -1147,9 +1309,7 @@ export function initializeMessageHandler(venombot) {
                             const valor = await user.browserPage.$('body > div.bg-gray > div > div:nth-child(3) > div.client-area > div > div > div > div > div.row > div.col-lg-8.mb-4.bottom-space > div.row > div.col-md-6.col-left > div > div.d-row > h4 > span.counter');
                             const valor1 = await user.browserPage.evaluate(element => element.textContent, valor);
                             await venombot.sendText({ to: user.id, message: 'saldo: ' + valor1 });
-                            await venombot.sendText({ to: user.id, message: "Escolha uma opção:\n1. *COLOCAR CRÉDITOS*\n2. *UDU FLASH TOOL*\n3. *IKEY PRIME*\n4. *IREMOVAL PRO*\n5. *ATIVAÇÃO UNLOCKTOOL*\n6. *PHOENIX FRP*\n\n  ---HISTORIOCO DE PEDIDOS---  \n\n7. *SERVIÇOS VIA IMEI | SN | ECID*\n8. *LINCEÇAS DE BOX E CREDITOS* " });
-                            
-                        
+                    await venombot.sendText({ to: user.id, message: "Escolha uma opção:\n1. *COLOCAR CRÉDITOS*\n2. *UDU FLASH TOOL*\n3. *IKEY PRIME*\n4. *IREMOVAL PRO*\n5. *ATIVAÇÃO UNLOCKTOOL*\n6. *PHOENIX FRP*\n7. *XIAOMI DEFINITIVO 165 CREDITOS*\n8. *XIAOMI SEMI DEFINITIVO (REMOTO)*\n9. *SANSUNG FRP (REMOTO)*\n10. *SAM-FRP TOOL*\n\n  ---HISTORIOCO DE PEDIDOS---  \n\n11. *SERVIÇOS VIA IMEI | SN | ECID*\n12. *LINCEÇAS DE BOX E CREDITOS*\n13. *SERVIÇOS REMOTOS*\n\n *finalizar* para encerrar sessão " });                        
                         }, 1000);
                     
                     } else if (message.body !== iniciocredito) {
@@ -1167,9 +1327,9 @@ export function initializeMessageHandler(venombot) {
 
                 if(user.getUnlockStep() === 7){
 
-                    await venombot.sendText({ to: user.id, message: 'voltando ao inicio' });
-                    if (message.body === iniciocredito) {
-
+                    
+                    if (message.body.toLowerCase() === iniciocredito) {
+                        await venombot.sendText({ to: user.id, message: 'voltando ao inicio' });
                         console.log("[ PALAVRA CHAVE ] CHAVE digitado: ", message.body);
                         await user.browserPage.goto("https://uniaodosunlockers.com.br/main");
                         const primeiroElementoHandle = await user.browserPage.$('div > div > div.modal-header > button');
@@ -1191,9 +1351,7 @@ export function initializeMessageHandler(venombot) {
                             const valor = await user.browserPage.$('body > div.bg-gray > div > div:nth-child(3) > div.client-area > div > div > div > div > div.row > div.col-lg-8.mb-4.bottom-space > div.row > div.col-md-6.col-left > div > div.d-row > h4 > span.counter');
                             const valor1 = await user.browserPage.evaluate(element => element.textContent, valor);
                             await venombot.sendText({ to: user.id, message: 'saldo: ' + valor1 });
-                            await venombot.sendText({ to: user.id, message: "Escolha uma opção:\n1. *COLOCAR CRÉDITOS*\n2. *UDU FLASH TOOL*\n3. *IKEY PRIME*\n4. *IREMOVAL PRO*\n5. *ATIVAÇÃO UNLOCKTOOL*\n6. *PHOENIX FRP*\n\n  ---HISTORIOCO DE PEDIDOS---  \n\n7. *SERVIÇOS VIA IMEI | SN | ECID*\n8. *LINCEÇAS DE BOX E CREDITOS* " });
-                            
-                        
+                    await venombot.sendText({ to: user.id, message: "Escolha uma opção:\n1. *COLOCAR CRÉDITOS*\n2. *UDU FLASH TOOL*\n3. *IKEY PRIME*\n4. *IREMOVAL PRO*\n5. *ATIVAÇÃO UNLOCKTOOL*\n6. *PHOENIX FRP*\n7. *XIAOMI DEFINITIVO 165 CREDITOS*\n8. *XIAOMI SEMI DEFINITIVO (REMOTO)*\n9. *SANSUNG FRP (REMOTO)*\n10. *SAM-FRP TOOL*\n\n  ---HISTORIOCO DE PEDIDOS---  \n\n11. *SERVIÇOS VIA IMEI | SN | ECID*\n12. *LINCEÇAS DE BOX E CREDITOS*\n13. *SERVIÇOS REMOTOS*\n\n *finalizar* para encerrar sessão " });                        
                         }, 1000);
                     
                     } else if (message.body !== iniciocredito) {
@@ -1209,6 +1367,9 @@ export function initializeMessageHandler(venombot) {
                     }, 3000)}
 
                 }
+
+
+
 
                 if(user.getPhoenixStep() === 1){
 
@@ -1227,7 +1388,7 @@ export function initializeMessageHandler(venombot) {
                     const numeroExtraido = await user.browserPage.evaluate(elemento => elemento.textContent, elementoNumero);
 
                     const numeroDaPagina = parseFloat(numeroExtraido);
-                    await venombot.sendText({ to: user.id, message: `insira a quantidade de créditos\n1 crédito = ${numeroDaPagina}` });
+                    await venombot.sendText({ to: user.id, message: `insira a quantidade de créditos\n1 crédito = ${numeroDaPagina}\n\n---digite *inicio* para voltar---` });
                      }, 3000)
 
                     user.setPhoenixStep(2);
@@ -1240,9 +1401,9 @@ export function initializeMessageHandler(venombot) {
 
                 if(user.getPhoenixStep() === 2){
 
-                    await venombot.sendText({ to: user.id, message: 'voltando ao inicio' });
-                    if (message.body === iniciocredito) {
-
+                    
+                    if (message.body.toLowerCase() === iniciocredito) {
+                        await venombot.sendText({ to: user.id, message: 'voltando ao inicio' });
                         console.log("[ PALAVRA CHAVE ] CHAVE digitado: ", message.body);
                         await user.browserPage.goto("https://uniaodosunlockers.com.br/main");
                         const primeiroElementoHandle = await user.browserPage.$('div > div > div.modal-header > button');
@@ -1264,9 +1425,7 @@ export function initializeMessageHandler(venombot) {
                             const valor = await user.browserPage.$('body > div.bg-gray > div > div:nth-child(3) > div.client-area > div > div > div > div > div.row > div.col-lg-8.mb-4.bottom-space > div.row > div.col-md-6.col-left > div > div.d-row > h4 > span.counter');
                             const valor1 = await user.browserPage.evaluate(element => element.textContent, valor);
                             await venombot.sendText({ to: user.id, message: 'saldo: ' + valor1 });
-                            await venombot.sendText({ to: user.id, message: "Escolha uma opção:\n1. *COLOCAR CRÉDITOS*\n2. *UDU FLASH TOOL*\n3. *IKEY PRIME*\n4. *IREMOVAL PRO*\n5. *ATIVAÇÃO UNLOCKTOOL*\n6. *PHOENIX FRP*\n\n  ---HISTORIOCO DE PEDIDOS---  \n\n7. *SERVIÇOS VIA IMEI | SN | ECID*\n8. *LINCEÇAS DE BOX E CREDITOS* " });
-                            
-                        
+                    await venombot.sendText({ to: user.id, message: "Escolha uma opção:\n1. *COLOCAR CRÉDITOS*\n2. *UDU FLASH TOOL*\n3. *IKEY PRIME*\n4. *IREMOVAL PRO*\n5. *ATIVAÇÃO UNLOCKTOOL*\n6. *PHOENIX FRP*\n7. *XIAOMI DEFINITIVO 165 CREDITOS*\n8. *XIAOMI SEMI DEFINITIVO (REMOTO)*\n9. *SANSUNG FRP (REMOTO)*\n10. *SAM-FRP TOOL*\n\n  ---HISTORIOCO DE PEDIDOS---  \n\n11. *SERVIÇOS VIA IMEI | SN | ECID*\n12. *LINCEÇAS DE BOX E CREDITOS*\n13. *SERVIÇOS REMOTOS*\n\n *finalizar* para encerrar sessão " });                        
                         }, 1000);
                     
                     } else if (message.body !== iniciocredito) {
@@ -1286,9 +1445,11 @@ export function initializeMessageHandler(venombot) {
                         if (userFieldHandle) {
                             // Multiplica o valor da mensagem por 5.1
                             const resultadoMultiplicacao = numeroDaPagina * numeroDoUsuario;
-    
+                            
+                            const resultadoFormatado = resultadoMultiplicacao.toFixed(2);
+
                             // Envia o resultado da multiplicação para o usuário
-                            await venombot.sendText({ to: user.id, message: `O valor total será: ${resultadoMultiplicacao}` });
+                            await venombot.sendText({ to: user.id, message: `O valor total será: ${resultadoFormatado}` });
                             await venombot.sendText({ to: user.id, message: 'insira seu Email' });
                             user.setPhoenixStep(3);
                         } else {
@@ -1303,6 +1464,33 @@ export function initializeMessageHandler(venombot) {
 
                 if(user.getPhoenixStep() === 3){
                     
+                    if (message.body.toLowerCase() === iniciocredito) {
+                        console.log("[ PALAVRA CHAVE ] CHAVE digitado: ", message.body);
+                            await user.browserPage.goto("https://uniaodosunlockers.com.br/main");
+                            const primeiroElementoHandle = await user.browserPage.$('div > div > div.modal-header > button');
+                        
+                            setTimeout(async () => {
+                            
+                                    // Clicar no primeiro elemento
+                                    await primeiroElementoHandle.click();
+                                    console.log("Primeiro elemento clicado com sucesso!");
+                                    user.setPhoenixStep(0);
+                                    user.setLoginStep(3);
+                                    console.log("encaminhando");
+    
+                                }, 4000);
+    
+                             setTimeout(async () => {
+                                await user.browserPage.waitForSelector('body > div.bg-gray > div > div:nth-child(3) > div.client-area > div > div > div > div > div.row > div.col-lg-8.mb-4.bottom-space > div.row > div.col-md-6.col-left > div > div.d-row > h4 > span.counter');
+        
+                                const valor = await user.browserPage.$('body > div.bg-gray > div > div:nth-child(3) > div.client-area > div > div > div > div > div.row > div.col-lg-8.mb-4.bottom-space > div.row > div.col-md-6.col-left > div > div.d-row > h4 > span.counter');
+                                const valor1 = await user.browserPage.evaluate(element => element.textContent, valor);
+                                await venombot.sendText({ to: user.id, message: 'saldo: ' + valor1 });
+                                                    await venombot.sendText({ to: user.id, message: "Escolha uma opção:\n1. *COLOCAR CRÉDITOS*\n2. *UDU FLASH TOOL*\n3. *IKEY PRIME*\n4. *IREMOVAL PRO*\n5. *ATIVAÇÃO UNLOCKTOOL*\n6. *PHOENIX FRP*\n7. *XIAOMI DEFINITIVO 165 CREDITOS*\n8. *XIAOMI SEMI DEFINITIVO (REMOTO)*\n9. *SANSUNG FRP (REMOTO)*\n10. *SAM-FRP TOOL*\n\n  ---HISTORIOCO DE PEDIDOS---  \n\n11. *SERVIÇOS VIA IMEI | SN | ECID*\n12. *LINCEÇAS DE BOX E CREDITOS*\n13. *SERVIÇOS REMOTOS*\n\n *finalizar* para encerrar sessão " });                                
+                            
+                            }, 1000);
+                    
+                    } else if (message.body !== iniciocredito) {
                     const userFieldHandle = await user.browserPage.$('#customfield393')
                     setTimeout(async () => {
                         await userFieldHandle.type(message.body)
@@ -1312,7 +1500,864 @@ export function initializeMessageHandler(venombot) {
                         
                     }, 3000)
             }
+                }
+
+
+
+
+                if(user.getXiaomidefStep() === 1){
+
+                    
+
+                    await user.browserPage.goto("https://uniaodosunlockers.com.br/resellerplaceorder/imei");
+               
+                    const click1 = await user.browserPage.$('#service_id_chosen');
+                    setTimeout(async () => {
+                    await click1.click({ button: 'left' });
+                    const Phoenixclique2 = await user.browserPage.$('li.active-result.group-option[data-option-array-index="128"]');
+                    await Phoenixclique2.click({ button: 'left' });
+
+                    setTimeout(async () => {
+                    const elementoNumero = await user.browserPage.$('#imei_custom');
+                    const numeroExtraido = await user.browserPage.evaluate(elemento => elemento.textContent, elementoNumero);
+
+                    const numeroDaPagina = parseFloat(numeroExtraido);
+                    await venombot.sendText({ to: user.id, message: `insira o codigo de bloqueio do dispositivo\n\n   ---digite *inicio* para voltar---` });
+                     }, 3000)
+
+                    user.setXiaomidefStep(2);
+                     }, 2000);
+
+                        
+                        
+                        
+                }
+
+                if(user.getXiaomidefStep() === 2){
+
+                    
+                    if (message.body.toLowerCase() === iniciocredito) {
+                        await venombot.sendText({ to: user.id, message: 'voltando ao inicio' });
+                        console.log("[ PALAVRA CHAVE ] CHAVE digitado: ", message.body);
+                        await user.browserPage.goto("https://uniaodosunlockers.com.br/main");
+                        const primeiroElementoHandle = await user.browserPage.$('div > div > div.modal-header > button');
+                    
+                        setTimeout(async () => {
+                        
+                                // Clicar no primeiro elemento
+                                await primeiroElementoHandle.click();
+                                console.log("Primeiro elemento clicado com sucesso!");
+                                user.setHelloStep(0);
+                                user.setLoginStep(3);
+                                console.log("encaminhando");
+
+                            }, 4000);
+
+                         setTimeout(async () => {
+                            await user.browserPage.waitForSelector('body > div.bg-gray > div > div:nth-child(3) > div.client-area > div > div > div > div > div.row > div.col-lg-8.mb-4.bottom-space > div.row > div.col-md-6.col-left > div > div.d-row > h4 > span.counter');
+    
+                            const valor = await user.browserPage.$('body > div.bg-gray > div > div:nth-child(3) > div.client-area > div > div > div > div > div.row > div.col-lg-8.mb-4.bottom-space > div.row > div.col-md-6.col-left > div > div.d-row > h4 > span.counter');
+                            const valor1 = await user.browserPage.evaluate(element => element.textContent, valor);
+                            await venombot.sendText({ to: user.id, message: 'saldo: ' + valor1 });
+                    await venombot.sendText({ to: user.id, message: "Escolha uma opção:\n1. *COLOCAR CRÉDITOS*\n2. *UDU FLASH TOOL*\n3. *IKEY PRIME*\n4. *IREMOVAL PRO*\n5. *ATIVAÇÃO UNLOCKTOOL*\n6. *PHOENIX FRP*\n7. *XIAOMI DEFINITIVO 165 CREDITOS*\n8. *XIAOMI SEMI DEFINITIVO (REMOTO)*\n9. *SANSUNG FRP (REMOTO)*\n10. *SAM-FRP TOOL*\n\n  ---HISTORIOCO DE PEDIDOS---  \n\n11. *SERVIÇOS VIA IMEI | SN | ECID*\n12. *LINCEÇAS DE BOX E CREDITOS*\n13. *SERVIÇOS REMOTOS*\n\n *finalizar* para encerrar sessão " });                        
+                        }, 1000);
+                    
+                    } else if (message.body !== iniciocredito) {
+                    const userFieldHandle = await user.browserPage.$('#imei_custom')
+                    setTimeout(async () => {
+                        await userFieldHandle.type(message.body)
+                        elementoPresente5();
+                        user.setXiaomidefStep(0);
+                        console.log("[ IMEI ] IMEI digitado: ", message.body);
+
+                        
+                    }, 1000)}
+                    
+                    
+
+                }
+
+
+
+
+                if(user.getXiaomisemiStep() === 1){
+
+                    
+
+                    await user.browserPage.goto("https://uniaodosunlockers.com.br/resellerplaceorder/remote");
+               
+                    const click1 = await user.browserPage.$('#service_id_chosen');
+                    setTimeout(async () => {
+                    await click1.click({ button: 'left' });
+                    const Phoenixclique2 = await user.browserPage.$('li.active-result.group-option[data-option-array-index="24"]');
+                    await Phoenixclique2.click({ button: 'left' });
+
+                    setTimeout(async () => {
+                    
+                    await venombot.sendText({ to: user.id, message: `insira o sue número de whatsapp para contato\n\n   ---digite *inicio* para voltar---` });
+                     }, 3000)
+                    user.setXiaomisemiStep(0);
+                    user.setXiaomisemiStep(2);
+                     }, 2000);
+
+                        
+                        
+                        
+                }
+
+                if(user.getXiaomisemiStep() === 2){
+
+                    
+                    if (message.body.toLowerCase() === iniciocredito) {
+                        await venombot.sendText({ to: user.id, message: 'voltando ao inicio' });
+                        console.log("[ PALAVRA CHAVE ] CHAVE digitado: ", message.body);
+                        await user.browserPage.goto("https://uniaodosunlockers.com.br/main");
+                        const primeiroElementoHandle = await user.browserPage.$('div > div > div.modal-header > button');
+                    
+                        setTimeout(async () => {
+                        
+                                // Clicar no primeiro elemento
+                                await primeiroElementoHandle.click();
+                                console.log("Primeiro elemento clicado com sucesso!");
+                                user.setHelloStep(0);
+                                user.setLoginStep(3);
+                                console.log("encaminhando");
+
+                            }, 4000);
+
+                         setTimeout(async () => {
+                            await user.browserPage.waitForSelector('body > div.bg-gray > div > div:nth-child(3) > div.client-area > div > div > div > div > div.row > div.col-lg-8.mb-4.bottom-space > div.row > div.col-md-6.col-left > div > div.d-row > h4 > span.counter');
+    
+                            const valor = await user.browserPage.$('body > div.bg-gray > div > div:nth-child(3) > div.client-area > div > div > div > div > div.row > div.col-lg-8.mb-4.bottom-space > div.row > div.col-md-6.col-left > div > div.d-row > h4 > span.counter');
+                            const valor1 = await user.browserPage.evaluate(element => element.textContent, valor);
+                            await venombot.sendText({ to: user.id, message: 'saldo: ' + valor1 });
+                    await venombot.sendText({ to: user.id, message: "Escolha uma opção:\n1. *COLOCAR CRÉDITOS*\n2. *UDU FLASH TOOL*\n3. *IKEY PRIME*\n4. *IREMOVAL PRO*\n5. *ATIVAÇÃO UNLOCKTOOL*\n6. *PHOENIX FRP*\n7. *XIAOMI DEFINITIVO 165 CREDITOS*\n8. *XIAOMI SEMI DEFINITIVO (REMOTO)*\n9. *SANSUNG FRP (REMOTO)*\n10. *SAM-FRP TOOL*\n\n  ---HISTORIOCO DE PEDIDOS---  \n\n11. *SERVIÇOS VIA IMEI | SN | ECID*\n12. *LINCEÇAS DE BOX E CREDITOS*\n13. *SERVIÇOS REMOTOS*\n\n *finalizar* para encerrar sessão " });                        
+                        }, 1000);
+                    
+                    } else if (message.body !== iniciocredito) {
+                    const userFieldHandle = await user.browserPage.$('#customfield341')
+                    setTimeout(async () => {
+                        await userFieldHandle.type(message.body)
+                        elementoPresente5();
+                        user.setXiaomisemiStep(0);
+                        console.log("[ WPP ] WPP digitado: ", message.body);
+
+                        
+                    }, 1000)}
+                    
+                    
+
+                }
+
+
+
+                const sam1 = "1"
+                const sam2 = "2"
+                const sam3 = "3"
+                const consul = "consul"
                 
+                if(user.getSamsungStep() === 1){
+
+                    console.log("[ SERVIÇO ] serviço escolhido ", message.body);
+
+                    if (message.body === sam1) {
+                        const ikeyclique2 = await user.browserPage.$('li.active-result.group-option[data-option-array-index="2"]');
+                        await ikeyclique2.click({ button: 'left' });
+                        await venombot.sendText({ to: user.id, message: 'aguarde...' });
+                        await venombot.sendText({ to: user.id, message: `insira o sue número de whatsapp para contato\n\n   ---digite *inicio* para voltar---` });
+                        setTimeout(async () => {
+                            user.setSamsungStep(2);
+                            }, 3000);
+        
+                    
+        
+                    } else if (message.body === sam2) {
+                        
+                        const iremovalclique3 = await user.browserPage.$('li.active-result.group-option[data-option-array-index="3"]');
+                        await iremovalclique3.click({ button: 'left' });
+                        await venombot.sendText({ to: user.id, message: 'aguarde...' });
+                        await venombot.sendText({ to: user.id, message: `insira o sue número de whatsapp para contato\n\n   ---digite *inicio* para voltar---` });
+                        setTimeout(async () => {
+                            user.setSamsungStep(3);
+                            }, 3000);
+        
+        
+                    } else if (message.body === sam3) {
+                        const iremovalclique4 = await user.browserPage.$('li.active-result.group-option[data-option-array-index="4"]');
+                        await iremovalclique4.click({ button: 'left' });
+                        await venombot.sendText({ to: user.id, message: 'aguarde...' });
+                        await venombot.sendText({ to: user.id, message: `insira o sue número de whatsapp para contato\n\n   ---digite *inicio* para voltar---` });
+                        setTimeout(async () => {
+                            user.setSamsungStep(4);
+                            }, 3000);
+                        
+        
+                    } else if (message.body.toLowerCase() === consul) {
+                        
+                        await venombot.sendText({ to: user.id, message: `FRP VIA USB REMOTO (NÃO PRECISA ABRIR) UPDATE 05/01\n• Samsung Galaxy A01 Core SM-A013F, SM-A013G, SM-A013M\n• Samsung Galaxy A02 SM-A022F SM-A022G, SM-A022M\n• Samsung Galaxy A03S SM-A037F, SM-A037G, SM-A037M, SM-A037U, SM-A037U1, SM-A037W\n• Samsung Galaxy A04 SM-A045F\n• Samsung Galaxy A04e SM-A042M, SM-A042F, SM-A045F, SM-A045M\n• Samsung Galaxy A05 SM-A055F | SM-A055F/DS | SM-A055M | SM-A055M/DS\n• Samsung Galaxy A05s SM-A057F | SM-A057F/DS | SM-A057M | SM-A057M/DS\n• Samsung Galaxy A10S SM-A107F,  SM-A107M\n• Samsung Galaxy A12 SM-A125F, SM-A125M, SM-A125N, SM-A125U, SM-A125U1, SM-A125W\n• Samsung Galaxy A13 5G SM-A136B, SM-A136U, SM-A136U1, SM-A136W, SM-A136F, SM-A136M\n• Samsung Galaxy A14 SM-A145P, SM-A146P, SM-A146U\n• Samsung Galaxy A21 SM-A215U, SM-A215U1, SM-A215W\n• Samsung Galaxy A22 SM-A225F, SM-A225M, SM-A226B, SM-A226BR, SM-A226L\n• Samsung Galaxy A24 SM-A245F, SM-A245M\n• Samsung Galaxy A31 SM-A315F, SM-A315G, SM-A315N\n• Samsung Galaxy A32 SM-A325F, SM-A325M, SM-A325N\n• Samsung Galaxy A32 5G SM-A326B, SM-A326BR, SM-A326K, SM-A326U, SM-A326U1, SM-A326W\n• Samsung Galaxy A34 / A34 5G SM-A346B, SM-A346E, SM-A346M\n• Samsung Galaxy A41 SM-A415F\n• Samsung Galaxy J7+ SM-C710F, SM-C7100\n• Samsung Galaxy F04 SM-E045F | SM-E045F/DS\n• Samsung Galaxy F22 SM-E225F\n• Samsung Galaxy F42 SM-E426B, SM-E426S\n• Samsung Galaxy Grand Prime Plus SM-G532F, SM-G532FD, SM-G532G, SM-G532M, SM-G532MT\n• Samsung Galaxy j7 Max SM-G615F, SM-G615FU\n• Samsung Galaxy M01 Core SM-M013F\n• Samsung Galaxy M01 SM-M015F, SM-M015G\n• Samsung Galaxy M01s SM-M017F\n• Samsung Galaxy M02 SM-M022F, SM-M022FV , SM-M022G, SM-M022M\n• Samsung Galaxy M02s SM-M025F\n• Samsung Galaxy M13 5G SM-M136B, SM-M136B/DS\n• Samsung Galaxy M22 SM-M225FV\n• Samsung Galaxy M32 SM-M325F, SM-M325FV\n• Samsung Galaxy M32 5G SM-M326B, SM-M536B\n• Samsung Galaxy M53 5G SM-M536S\n• Samsung Galaxy Tab A7 Lite SM-T225, SM-T225C,SM-T225M,SM-T225N, SM-T220\n• Samsung Galaxy Tab A7 Lite LTE SM-T227, SM-T227U\n• Samsung GalaxySamsung Galaxy Jump 5G SM-A326K` });
+                        await venombot.sendText({ to: user.id, message: `*-----MODELOS USA-----*\n\n• Samsung Galaxy A13 (SM-A135U)\n• Samsung Galaxy A14 5G (SM-A146U)\n• Samsung Galaxy A50 (SM-A505U)\n• Samsung Galaxy A51 (SM-A515U)\n• Samsung Galaxy S21 Ultra 5G (SM-G998U)\n• Samsung Galaxy S21+ Plus (SM-G996U)\n• Samsung Galaxy S21 5G (SM-G991U)\n• Samsung Galaxy S21 FE 5G (SM-G990U)\n• Samsung Galaxy S20+ 5G (SM-G986U)\n• Samsung Galaxy S20 Ultra 5G (SM-G988U)\n• Samsung Galaxy S22 Ultra 5G (SM-S908U)\n• Samsung Galaxy S22 5G (SM-S901U)\n• Samsung Galaxy S23 (SM-S911U)\n• Samsung Galaxy S23+ (SM-S916U)\n• Samsung Galaxy S23 Ultra (SM-S918U)\n• Samsung Galaxy Note 20 Ultra 5G (SM-N986U)\n• Samsung Galaxy Note20 5G (SM-N981U)\n• Samsung Galaxy Z Fold 3 (SM-F926U)\n• Samsung Galaxy Z Fold 4 (SM-F936U)\n• Samsung Galaxy Z Fold5 (SM-F946U)\n• Samsung Galaxy Z Flip 3 5G (SM-F711U)\n• Samsung Galaxy Z Flip 4 (SM-F721U)\n• Samsung Galaxy Z Flip5 (SM-F731U)` });
+
+                    } else if (message.body.toLowerCase() === iniciocredito) {
+                        await venombot.sendText({ to: user.id, message: 'voltando ao inicio' });
+                        console.log("[ PALAVRA CHAVE ] CHAVE digitado: ", message.body);
+                        await user.browserPage.goto("https://uniaodosunlockers.com.br/main");
+                        const primeiroElementoHandle = await user.browserPage.$('div > div > div.modal-header > button');
+                    
+                        setTimeout(async () => {
+                        
+                                // Clicar no primeiro elemento
+                                await primeiroElementoHandle.click();
+                                console.log("Primeiro elemento clicado com sucesso!");
+                                user.setUnlockStep(0);
+                                user.setLoginStep(3);
+                                console.log("encaminhando");
+
+                            }, 4000);
+
+                         setTimeout(async () => {
+                            await user.browserPage.waitForSelector('body > div.bg-gray > div > div:nth-child(3) > div.client-area > div > div > div > div > div.row > div.col-lg-8.mb-4.bottom-space > div.row > div.col-md-6.col-left > div > div.d-row > h4 > span.counter');
+    
+                            const valor = await user.browserPage.$('body > div.bg-gray > div > div:nth-child(3) > div.client-area > div > div > div > div > div.row > div.col-lg-8.mb-4.bottom-space > div.row > div.col-md-6.col-left > div > div.d-row > h4 > span.counter');
+                            const valor1 = await user.browserPage.evaluate(element => element.textContent, valor);
+                            await venombot.sendText({ to: user.id, message: 'saldo: ' + valor1 });
+                    await venombot.sendText({ to: user.id, message: "Escolha uma opção:\n1. *COLOCAR CRÉDITOS*\n2. *UDU FLASH TOOL*\n3. *IKEY PRIME*\n4. *IREMOVAL PRO*\n5. *ATIVAÇÃO UNLOCKTOOL*\n6. *PHOENIX FRP*\n7. *XIAOMI DEFINITIVO 165 CREDITOS*\n8. *XIAOMI SEMI DEFINITIVO (REMOTO)*\n9. *SANSUNG FRP (REMOTO)*\n10. *SAM-FRP TOOL*\n\n  ---HISTORIOCO DE PEDIDOS---  \n\n11. *SERVIÇOS VIA IMEI | SN | ECID*\n12. *LINCEÇAS DE BOX E CREDITOS*\n13. *SERVIÇOS REMOTOS*\n\n *finalizar* para encerrar sessão " });                        
+                        }, 1000);
+                    
+                    }
+                }
+
+                if(user.getSamsungStep() === 2){
+
+                    
+                    if (message.body.toLowerCase() === iniciocredito) {
+                        await venombot.sendText({ to: user.id, message: 'voltando ao inicio' });
+                        console.log("[ PALAVRA CHAVE ] CHAVE digitado: ", message.body);
+                        await user.browserPage.goto("https://uniaodosunlockers.com.br/main");
+                        const primeiroElementoHandle = await user.browserPage.$('div > div > div.modal-header > button');
+                    
+                        setTimeout(async () => {
+                        
+                                // Clicar no primeiro elemento
+                                await primeiroElementoHandle.click();
+                                console.log("Primeiro elemento clicado com sucesso!");
+                                user.setHelloStep(0);
+                                user.setLoginStep(3);
+                                console.log("encaminhando");
+
+                            }, 4000);
+
+                         setTimeout(async () => {
+                            await user.browserPage.waitForSelector('body > div.bg-gray > div > div:nth-child(3) > div.client-area > div > div > div > div > div.row > div.col-lg-8.mb-4.bottom-space > div.row > div.col-md-6.col-left > div > div.d-row > h4 > span.counter');
+    
+                            const valor = await user.browserPage.$('body > div.bg-gray > div > div:nth-child(3) > div.client-area > div > div > div > div > div.row > div.col-lg-8.mb-4.bottom-space > div.row > div.col-md-6.col-left > div > div.d-row > h4 > span.counter');
+                            const valor1 = await user.browserPage.evaluate(element => element.textContent, valor);
+                            await venombot.sendText({ to: user.id, message: 'saldo: ' + valor1 });
+                    await venombot.sendText({ to: user.id, message: "Escolha uma opção:\n1. *COLOCAR CRÉDITOS*\n2. *UDU FLASH TOOL*\n3. *IKEY PRIME*\n4. *IREMOVAL PRO*\n5. *ATIVAÇÃO UNLOCKTOOL*\n6. *PHOENIX FRP*\n7. *XIAOMI DEFINITIVO 165 CREDITOS*\n8. *XIAOMI SEMI DEFINITIVO (REMOTO)*\n9. *SANSUNG FRP (REMOTO)*\n10. *SAM-FRP TOOL*\n\n  ---HISTORIOCO DE PEDIDOS---  \n\n11. *SERVIÇOS VIA IMEI | SN | ECID*\n12. *LINCEÇAS DE BOX E CREDITOS*\n13. *SERVIÇOS REMOTOS*\n\n *finalizar* para encerrar sessão " });                        
+                        }, 1000);
+                    
+                    } else if (message.body !== iniciocredito) {
+                    const userFieldHandle = await user.browserPage.$('#customfield351')
+                    setTimeout(async () => {
+                        await userFieldHandle.type(message.body)
+                        elementoPresente5();
+                        user.setSamsungStep(0);
+                        console.log("[ WPP ] WPP digitado: ", message.body);
+
+                        
+                    }, 1000)}
+                    
+                    
+
+                }
+
+                if(user.getSamsungStep() === 3){
+
+                    
+                    if (message.body.toLowerCase() === iniciocredito) {
+                        await venombot.sendText({ to: user.id, message: 'voltando ao inicio' });
+                        console.log("[ PALAVRA CHAVE ] CHAVE digitado: ", message.body);
+                        await user.browserPage.goto("https://uniaodosunlockers.com.br/main");
+                        const primeiroElementoHandle = await user.browserPage.$('div > div > div.modal-header > button');
+                    
+                        setTimeout(async () => {
+                        
+                                // Clicar no primeiro elemento
+                                await primeiroElementoHandle.click();
+                                console.log("Primeiro elemento clicado com sucesso!");
+                                user.setHelloStep(0);
+                                user.setLoginStep(3);
+                                console.log("encaminhando");
+
+                            }, 4000);
+
+                         setTimeout(async () => {
+                            await user.browserPage.waitForSelector('body > div.bg-gray > div > div:nth-child(3) > div.client-area > div > div > div > div > div.row > div.col-lg-8.mb-4.bottom-space > div.row > div.col-md-6.col-left > div > div.d-row > h4 > span.counter');
+    
+                            const valor = await user.browserPage.$('body > div.bg-gray > div > div:nth-child(3) > div.client-area > div > div > div > div > div.row > div.col-lg-8.mb-4.bottom-space > div.row > div.col-md-6.col-left > div > div.d-row > h4 > span.counter');
+                            const valor1 = await user.browserPage.evaluate(element => element.textContent, valor);
+                            await venombot.sendText({ to: user.id, message: 'saldo: ' + valor1 });
+                    await venombot.sendText({ to: user.id, message: "Escolha uma opção:\n1. *COLOCAR CRÉDITOS*\n2. *UDU FLASH TOOL*\n3. *IKEY PRIME*\n4. *IREMOVAL PRO*\n5. *ATIVAÇÃO UNLOCKTOOL*\n6. *PHOENIX FRP*\n7. *XIAOMI DEFINITIVO 165 CREDITOS*\n8. *XIAOMI SEMI DEFINITIVO (REMOTO)*\n9. *SANSUNG FRP (REMOTO)*\n10. *SAM-FRP TOOL*\n\n  ---HISTORIOCO DE PEDIDOS---  \n\n11. *SERVIÇOS VIA IMEI | SN | ECID*\n12. *LINCEÇAS DE BOX E CREDITOS*\n13. *SERVIÇOS REMOTOS*\n\n *finalizar* para encerrar sessão " });                        
+                        }, 1000);
+                    
+                    } else if (message.body !== iniciocredito) {
+                    const userFieldHandle = await user.browserPage.$('#customfield339')
+                    setTimeout(async () => {
+                        await userFieldHandle.type(message.body)
+                        elementoPresente5();
+                        user.setSamsungStep(0);
+                        console.log("[ WPP ] WPP digitado: ", message.body);
+
+                        
+                    }, 1000)}
+                    
+                    
+
+                }
+
+                if(user.getSamsungStep() === 4){
+
+                    
+                    if (message.body.toLowerCase() === iniciocredito) {
+                        await venombot.sendText({ to: user.id, message: 'voltando ao inicio' });
+                        console.log("[ PALAVRA CHAVE ] CHAVE digitado: ", message.body);
+                        await user.browserPage.goto("https://uniaodosunlockers.com.br/main");
+                        const primeiroElementoHandle = await user.browserPage.$('div > div > div.modal-header > button');
+                    
+                        setTimeout(async () => {
+                        
+                                // Clicar no primeiro elemento
+                                await primeiroElementoHandle.click();
+                                console.log("Primeiro elemento clicado com sucesso!");
+                                user.setHelloStep(0);
+                                user.setLoginStep(3);
+                                console.log("encaminhando");
+
+                            }, 4000);
+
+                         setTimeout(async () => {
+                            await user.browserPage.waitForSelector('body > div.bg-gray > div > div:nth-child(3) > div.client-area > div > div > div > div > div.row > div.col-lg-8.mb-4.bottom-space > div.row > div.col-md-6.col-left > div > div.d-row > h4 > span.counter');
+    
+                            const valor = await user.browserPage.$('body > div.bg-gray > div > div:nth-child(3) > div.client-area > div > div > div > div > div.row > div.col-lg-8.mb-4.bottom-space > div.row > div.col-md-6.col-left > div > div.d-row > h4 > span.counter');
+                            const valor1 = await user.browserPage.evaluate(element => element.textContent, valor);
+                            await venombot.sendText({ to: user.id, message: 'saldo: ' + valor1 });
+                    await venombot.sendText({ to: user.id, message: "Escolha uma opção:\n1. *COLOCAR CRÉDITOS*\n2. *UDU FLASH TOOL*\n3. *IKEY PRIME*\n4. *IREMOVAL PRO*\n5. *ATIVAÇÃO UNLOCKTOOL*\n6. *PHOENIX FRP*\n7. *XIAOMI DEFINITIVO 165 CREDITOS*\n8. *XIAOMI SEMI DEFINITIVO (REMOTO)*\n9. *SANSUNG FRP (REMOTO)*\n10. *SAM-FRP TOOL*\n\n  ---HISTORIOCO DE PEDIDOS---  \n\n11. *SERVIÇOS VIA IMEI | SN | ECID*\n12. *LINCEÇAS DE BOX E CREDITOS*\n13. *SERVIÇOS REMOTOS*\n\n *finalizar* para encerrar sessão " });                        
+                        }, 1000);
+                    
+                    } else if (message.body !== iniciocredito) {
+                    const userFieldHandle = await user.browserPage.$('#customfield422')
+                    setTimeout(async () => {
+                        await userFieldHandle.type(message.body)
+                        await venombot.sendText({ to: user.id, message: `insira o MODELO (Ex: SM-1234F)\n\n   ---digite *inicio* para voltar---` });
+                        user.setSamsungStep(5);
+                        console.log("[ WPP ] WPP digitado: ", message.body);
+
+                        
+                    }, 1000)}
+                    
+                    
+
+                }
+
+                if(user.getSamsungStep() === 5){
+
+                    
+                    if (message.body.toLowerCase() === iniciocredito) {
+                        await venombot.sendText({ to: user.id, message: 'voltando ao inicio' });
+                        console.log("[ PALAVRA CHAVE ] CHAVE digitado: ", message.body);
+                        await user.browserPage.goto("https://uniaodosunlockers.com.br/main");
+                        const primeiroElementoHandle = await user.browserPage.$('div > div > div.modal-header > button');
+                    
+                        setTimeout(async () => {
+                        
+                                // Clicar no primeiro elemento
+                                await primeiroElementoHandle.click();
+                                console.log("Primeiro elemento clicado com sucesso!");
+                                user.setHelloStep(0);
+                                user.setLoginStep(3);
+                                console.log("encaminhando");
+
+                            }, 4000);
+
+                         setTimeout(async () => {
+                            await user.browserPage.waitForSelector('body > div.bg-gray > div > div:nth-child(3) > div.client-area > div > div > div > div > div.row > div.col-lg-8.mb-4.bottom-space > div.row > div.col-md-6.col-left > div > div.d-row > h4 > span.counter');
+    
+                            const valor = await user.browserPage.$('body > div.bg-gray > div > div:nth-child(3) > div.client-area > div > div > div > div > div.row > div.col-lg-8.mb-4.bottom-space > div.row > div.col-md-6.col-left > div > div.d-row > h4 > span.counter');
+                            const valor1 = await user.browserPage.evaluate(element => element.textContent, valor);
+                            await venombot.sendText({ to: user.id, message: 'saldo: ' + valor1 });
+                    await venombot.sendText({ to: user.id, message: "Escolha uma opção:\n1. *COLOCAR CRÉDITOS*\n2. *UDU FLASH TOOL*\n3. *IKEY PRIME*\n4. *IREMOVAL PRO*\n5. *ATIVAÇÃO UNLOCKTOOL*\n6. *PHOENIX FRP*\n7. *XIAOMI DEFINITIVO 165 CREDITOS*\n8. *XIAOMI SEMI DEFINITIVO (REMOTO)*\n9. *SANSUNG FRP (REMOTO)*\n10. *SAM-FRP TOOL*\n\n  ---HISTORIOCO DE PEDIDOS---  \n\n11. *SERVIÇOS VIA IMEI | SN | ECID*\n12. *LINCEÇAS DE BOX E CREDITOS*\n13. *SERVIÇOS REMOTOS*\n\n *finalizar* para encerrar sessão " });                        
+                        }, 1000);
+                    
+                    } else if (message.body !== iniciocredito) {
+                    const userFieldHandle = await user.browserPage.$('#customfield423')
+                    setTimeout(async () => {
+                        await userFieldHandle.type(message.body)
+                        elementoPresente5();
+                        user.setSamsungStep(0);
+                        console.log("[ MODELO ] MODELO digitado: ", message.body);
+
+                        
+                    }, 1000)}
+                    
+                    
+
+                }
+
+                const samfr1 = "1"
+                const samfr2 = "2"
+
+                if(user.getSamfrpStep() === 1) {
+                    console.log("[ SERVIÇO ] serviço escolhido ", message.body);
+
+                    if (message.body === samfr1) {
+                        const ikeyclique2 = await user.browserPage.$('li.active-result.group-option[data-option-array-index="4"]');
+                        await ikeyclique2.click({ button: 'left' });
+                        await venombot.sendText({ to: user.id, message: 'aguarde...' });
+                        
+                        setTimeout(async () => {
+                            const elementoNumero = await user.browserPage.$('#ctotal');
+                            const numeroExtraido = await user.browserPage.evaluate(elemento => elemento.textContent, elementoNumero);
+        
+                            const numeroDaPagina = parseFloat(numeroExtraido);
+                            await venombot.sendText({ to: user.id, message: `insira a quantidade de créditos\n1 crédito = ${numeroDaPagina}\nquantidade minima de 12 creditos\n\n---digite *inicio* para voltar---` });
+                            user.setSamfrpStep(0);
+                            user.setSamfrpStep(2);
+                            }, 3000)
+                        
+ 
+                    } else if (message.body === samfr2) {
+                        
+                        const iremovalclique3 = await user.browserPage.$('li.active-result.group-option[data-option-array-index="5"]');
+                        await iremovalclique3.click({ button: 'left' });
+                        await venombot.sendText({ to: user.id, message: 'aguarde...' });
+
+                        setTimeout(async () => {
+                            const elementoNumero = await user.browserPage.$('#ctotal');
+                            const numeroExtraido = await user.browserPage.evaluate(elemento => elemento.textContent, elementoNumero);
+        
+                            const numeroDaPagina = parseFloat(numeroExtraido);
+                            await venombot.sendText({ to: user.id, message: `insira a quantidade de créditos\n1 crédito = ${numeroDaPagina}\nquantidade minima de 12 creditos\n\n---digite *inicio* para voltar---` });
+                            user.setSamfrpStep(0);
+                            user.setSamfrpStep(8);
+                            }, 3000)
+
+
+                    }
+                }
+
+                if(user.getSamfrpStep() === 2){
+
+                    
+                    if (message.body.toLowerCase() === iniciocredito) {
+                        await venombot.sendText({ to: user.id, message: 'voltando ao inicio' });
+                        console.log("[ PALAVRA CHAVE ] CHAVE digitado: ", message.body);
+                        await user.browserPage.goto("https://uniaodosunlockers.com.br/main");
+                        const primeiroElementoHandle = await user.browserPage.$('div > div > div.modal-header > button');
+                    
+                        setTimeout(async () => {
+                        
+                                // Clicar no primeiro elemento
+                                await primeiroElementoHandle.click();
+                                console.log("Primeiro elemento clicado com sucesso!");
+                                user.setSamfrpStep(0);
+                                user.setLoginStep(3);
+                                console.log("encaminhando");
+
+                            }, 4000);
+
+                         setTimeout(async () => {
+                            await user.browserPage.waitForSelector('body > div.bg-gray > div > div:nth-child(3) > div.client-area > div > div > div > div > div.row > div.col-lg-8.mb-4.bottom-space > div.row > div.col-md-6.col-left > div > div.d-row > h4 > span.counter');
+    
+                            const valor = await user.browserPage.$('body > div.bg-gray > div > div:nth-child(3) > div.client-area > div > div > div > div > div.row > div.col-lg-8.mb-4.bottom-space > div.row > div.col-md-6.col-left > div > div.d-row > h4 > span.counter');
+                            const valor1 = await user.browserPage.evaluate(element => element.textContent, valor);
+                            await venombot.sendText({ to: user.id, message: 'saldo: ' + valor1 });
+                    await venombot.sendText({ to: user.id, message: "Escolha uma opção:\n1. *COLOCAR CRÉDITOS*\n2. *UDU FLASH TOOL*\n3. *IKEY PRIME*\n4. *IREMOVAL PRO*\n5. *ATIVAÇÃO UNLOCKTOOL*\n6. *PHOENIX FRP*\n7. *XIAOMI DEFINITIVO 165 CREDITOS*\n8. *XIAOMI SEMI DEFINITIVO (REMOTO)*\n9. *SANSUNG FRP (REMOTO)*\n10. *SAM-FRP TOOL*\n\n  ---HISTORIOCO DE PEDIDOS---  \n\n11. *SERVIÇOS VIA IMEI | SN | ECID*\n12. *LINCEÇAS DE BOX E CREDITOS*\n13. *SERVIÇOS REMOTOS*\n\n *finalizar* para encerrar sessão " });                        
+                        }, 1000);
+                    
+                    } else if (message.body !== iniciocredito) {
+
+                        if (!isNaN(message.body) && parseInt(message.body) < 12) {
+                            
+                            console.log("O número digitado é menor que 12.");
+
+                        await venombot.sendText({ to: user.id, message: 'mínimo de creditos menor que 12...\nreiniciando' });
+                        user.setSamfrpStep(0);
+                        await sam();
+
+                        } else {
+                            
+                    const elementoNumero = await user.browserPage.$('#ctotal');
+                    const numeroExtraido = await user.browserPage.evaluate(elemento => elemento.textContent, elementoNumero);
+
+                    const numeroDaPagina = parseFloat(numeroExtraido);
+                    const numeroDoUsuario = parseFloat(message.body);
+
+
+                        const userFieldHandle = await user.browserPage.$('#qnt')
+                    setTimeout(async () => {
+                        await userFieldHandle.type(message.body)
+
+                        console.log("[ CREDITOS ] VALOR digitado: ", message.body);
+                        
+                        if (userFieldHandle) {
+                            // Multiplica o valor da mensagem por 5.1
+                            const resultadoMultiplicacao = numeroDaPagina * numeroDoUsuario;
+
+                            const resultadoFormatado = resultadoMultiplicacao.toFixed(2);
+    
+                            // Envia o resultado da multiplicação para o usuário
+                            await venombot.sendText({ to: user.id, message: `O valor total será: ${resultadoFormatado}` });
+                            await venombot.sendText({ to: user.id, message: 'insira o nome de usuario desejado' });
+                            user.setSamfrpStep(0);
+                            user.setSamfrpStep(3);
+                        } else {
+                            console.error("Campo não encontrado na página.");
+                        }
+
+                        
+                        
+                    }, 3000)
+                            
+                            console.log("O número digitado não é menor que 12.");
+
+                            
+                        }
+
+                    }
+
+                }
+
+                if(user.getSamfrpStep() === 3){
+                    
+                    if (message.body.toLowerCase() === iniciocredito) {
+                        console.log("[ PALAVRA CHAVE ] CHAVE digitado: ", message.body);
+                            await user.browserPage.goto("https://uniaodosunlockers.com.br/main");
+                            const primeiroElementoHandle = await user.browserPage.$('div > div > div.modal-header > button');
+                        
+                            setTimeout(async () => {
+                            
+                                    // Clicar no primeiro elemento
+                                    await primeiroElementoHandle.click();
+                                    console.log("Primeiro elemento clicado com sucesso!");
+                                    user.setSamfrpStep(0);
+                                    user.setLoginStep(3);
+                                    console.log("encaminhando");
+    
+                                }, 4000);
+    
+                             setTimeout(async () => {
+                                await user.browserPage.waitForSelector('body > div.bg-gray > div > div:nth-child(3) > div.client-area > div > div > div > div > div.row > div.col-lg-8.mb-4.bottom-space > div.row > div.col-md-6.col-left > div > div.d-row > h4 > span.counter');
+        
+                                const valor = await user.browserPage.$('body > div.bg-gray > div > div:nth-child(3) > div.client-area > div > div > div > div > div.row > div.col-lg-8.mb-4.bottom-space > div.row > div.col-md-6.col-left > div > div.d-row > h4 > span.counter');
+                                const valor1 = await user.browserPage.evaluate(element => element.textContent, valor);
+                                await venombot.sendText({ to: user.id, message: 'saldo: ' + valor1 });
+                                await venombot.sendText({ to: user.id, message: "Escolha uma opção:\n1. *COLOCAR CRÉDITOS*\n2. *UDU FLASH TOOL*\n3. *IKEY PRIME*\n4. *IREMOVAL PRO*\n5. *ATIVAÇÃO UNLOCKTOOL*\n6. *PHOENIX FRP*\n7. *XIAOMI DEFINITIVO 165 CREDITOS*\n8. *XIAOMI SEMI DEFINITIVO (REMOTO)*\n9. *SANSUNG FRP (REMOTO)*\n10. *SAM-FRP TOOL*\n\n  ---HISTORIOCO DE PEDIDOS---  \n\n11. *SERVIÇOS VIA IMEI | SN | ECID*\n12. *LINCEÇAS DE BOX E CREDITOS*\n13. *SERVIÇOS REMOTOS*\n\n *finalizar* para encerrar sessão " });                                
+                            
+                            }, 1000);
+                    
+                    } else if (message.body !== iniciocredito) {
+                    const userFieldHandle = await user.browserPage.$('#customfield437')
+                    setTimeout(async () => {
+                        await userFieldHandle.type(message.body)
+
+                        console.log("[ NEW USER ] USER digitado: ", message.body);
+                        await venombot.sendText({ to: user.id, message: 'insira a senha desejado' });
+                        user.setSamfrpStep(0);
+                        user.setSamfrpStep(4);
+                        
+                    }, 3000)
+            }
+                }
+
+                if(user.getSamfrpStep() === 4){
+                    
+                    if (message.body.toLowerCase() === iniciocredito) {
+                        console.log("[ PALAVRA CHAVE ] CHAVE digitado: ", message.body);
+                            await user.browserPage.goto("https://uniaodosunlockers.com.br/main");
+                            const primeiroElementoHandle = await user.browserPage.$('div > div > div.modal-header > button');
+                        
+                            setTimeout(async () => {
+                            
+                                    // Clicar no primeiro elemento
+                                    await primeiroElementoHandle.click();
+                                    console.log("Primeiro elemento clicado com sucesso!");
+                                    user.setSamfrpStep(0);
+                                    user.setLoginStep(3);
+                                    console.log("encaminhando");
+    
+                                }, 4000);
+    
+                             setTimeout(async () => {
+                                await user.browserPage.waitForSelector('body > div.bg-gray > div > div:nth-child(3) > div.client-area > div > div > div > div > div.row > div.col-lg-8.mb-4.bottom-space > div.row > div.col-md-6.col-left > div > div.d-row > h4 > span.counter');
+        
+                                const valor = await user.browserPage.$('body > div.bg-gray > div > div:nth-child(3) > div.client-area > div > div > div > div > div.row > div.col-lg-8.mb-4.bottom-space > div.row > div.col-md-6.col-left > div > div.d-row > h4 > span.counter');
+                                const valor1 = await user.browserPage.evaluate(element => element.textContent, valor);
+                                await venombot.sendText({ to: user.id, message: 'saldo: ' + valor1 });
+                                await venombot.sendText({ to: user.id, message: "Escolha uma opção:\n1. *COLOCAR CRÉDITOS*\n2. *UDU FLASH TOOL*\n3. *IKEY PRIME*\n4. *IREMOVAL PRO*\n5. *ATIVAÇÃO UNLOCKTOOL*\n6. *PHOENIX FRP*\n7. *XIAOMI DEFINITIVO 165 CREDITOS*\n8. *XIAOMI SEMI DEFINITIVO (REMOTO)*\n9. *SANSUNG FRP (REMOTO)*\n10. *SAM-FRP TOOL*\n\n  ---HISTORIOCO DE PEDIDOS---  \n\n11. *SERVIÇOS VIA IMEI | SN | ECID*\n12. *LINCEÇAS DE BOX E CREDITOS*\n13. *SERVIÇOS REMOTOS*\n\n *finalizar* para encerrar sessão " });                                
+                            
+                            }, 1000);
+                    
+                    } else if (message.body !== iniciocredito) {
+                    const userFieldHandle = await user.browserPage.$('#customfield438')
+                    setTimeout(async () => {
+                        await userFieldHandle.type(message.body)
+
+                        console.log("[ NEW SENHA ] senha digitado: ", message.body);
+                        await venombot.sendText({ to: user.id, message: 'insira seu numero de telefone' });
+                        user.setSamfrpStep(0);
+                        user.setSamfrpStep(5);
+                        
+                    }, 3000)
+            }
+                }
+
+                if(user.getSamfrpStep() === 5){
+                    
+                    if (message.body.toLowerCase() === iniciocredito) {
+                        console.log("[ PALAVRA CHAVE ] CHAVE digitado: ", message.body);
+                            await user.browserPage.goto("https://uniaodosunlockers.com.br/main");
+                            const primeiroElementoHandle = await user.browserPage.$('div > div > div.modal-header > button');
+                        
+                            setTimeout(async () => {
+                            
+                                    // Clicar no primeiro elemento
+                                    await primeiroElementoHandle.click();
+                                    console.log("Primeiro elemento clicado com sucesso!");
+                                    user.setSamfrpStep(0);
+                                    user.setLoginStep(3);
+                                    console.log("encaminhando");
+    
+                                }, 4000);
+    
+                             setTimeout(async () => {
+                                await user.browserPage.waitForSelector('body > div.bg-gray > div > div:nth-child(3) > div.client-area > div > div > div > div > div.row > div.col-lg-8.mb-4.bottom-space > div.row > div.col-md-6.col-left > div > div.d-row > h4 > span.counter');
+        
+                                const valor = await user.browserPage.$('body > div.bg-gray > div > div:nth-child(3) > div.client-area > div > div > div > div > div.row > div.col-lg-8.mb-4.bottom-space > div.row > div.col-md-6.col-left > div > div.d-row > h4 > span.counter');
+                                const valor1 = await user.browserPage.evaluate(element => element.textContent, valor);
+                                await venombot.sendText({ to: user.id, message: 'saldo: ' + valor1 });
+                                await venombot.sendText({ to: user.id, message: "Escolha uma opção:\n1. *COLOCAR CRÉDITOS*\n2. *UDU FLASH TOOL*\n3. *IKEY PRIME*\n4. *IREMOVAL PRO*\n5. *ATIVAÇÃO UNLOCKTOOL*\n6. *PHOENIX FRP*\n7. *XIAOMI DEFINITIVO 165 CREDITOS*\n8. *XIAOMI SEMI DEFINITIVO (REMOTO)*\n9. *SANSUNG FRP (REMOTO)*\n10. *SAM-FRP TOOL*\n\n  ---HISTORIOCO DE PEDIDOS---  \n\n11. *SERVIÇOS VIA IMEI | SN | ECID*\n12. *LINCEÇAS DE BOX E CREDITOS*\n13. *SERVIÇOS REMOTOS*\n\n *finalizar* para encerrar sessão " });                                
+                            
+                            }, 1000);
+                    
+                    } else if (message.body !== iniciocredito) {
+                    const userFieldHandle = await user.browserPage.$('#customfield439')
+                    setTimeout(async () => {
+                        await userFieldHandle.type(message.body)
+
+                        console.log("[ NEW ] TELEFONE digitado: ", message.body);
+                        await venombot.sendText({ to: user.id, message: 'insira seu email' });
+                        user.setSamfrpStep(0);
+                        user.setSamfrpStep(6);
+                        
+                    }, 3000)
+            }
+                }
+
+                if(user.getSamfrpStep() === 6){
+                    
+                    if (message.body.toLowerCase() === iniciocredito) {
+                        console.log("[ PALAVRA CHAVE ] CHAVE digitado: ", message.body);
+                            await user.browserPage.goto("https://uniaodosunlockers.com.br/main");
+                            const primeiroElementoHandle = await user.browserPage.$('div > div > div.modal-header > button');
+                        
+                            setTimeout(async () => {
+                            
+                                    // Clicar no primeiro elemento
+                                    await primeiroElementoHandle.click();
+                                    console.log("Primeiro elemento clicado com sucesso!");
+                                    user.setSamfrpStep(0);
+                                    user.setLoginStep(3);
+                                    console.log("encaminhando");
+    
+                                }, 4000);
+    
+                             setTimeout(async () => {
+                                await user.browserPage.waitForSelector('body > div.bg-gray > div > div:nth-child(3) > div.client-area > div > div > div > div > div.row > div.col-lg-8.mb-4.bottom-space > div.row > div.col-md-6.col-left > div > div.d-row > h4 > span.counter');
+        
+                                const valor = await user.browserPage.$('body > div.bg-gray > div > div:nth-child(3) > div.client-area > div > div > div > div > div.row > div.col-lg-8.mb-4.bottom-space > div.row > div.col-md-6.col-left > div > div.d-row > h4 > span.counter');
+                                const valor1 = await user.browserPage.evaluate(element => element.textContent, valor);
+                                await venombot.sendText({ to: user.id, message: 'saldo: ' + valor1 });
+                                await venombot.sendText({ to: user.id, message: "Escolha uma opção:\n1. *COLOCAR CRÉDITOS*\n2. *UDU FLASH TOOL*\n3. *IKEY PRIME*\n4. *IREMOVAL PRO*\n5. *ATIVAÇÃO UNLOCKTOOL*\n6. *PHOENIX FRP*\n7. *XIAOMI DEFINITIVO 165 CREDITOS*\n8. *XIAOMI SEMI DEFINITIVO (REMOTO)*\n9. *SANSUNG FRP (REMOTO)*\n10. *SAM-FRP TOOL*\n\n  ---HISTORIOCO DE PEDIDOS---  \n\n11. *SERVIÇOS VIA IMEI | SN | ECID*\n12. *LINCEÇAS DE BOX E CREDITOS*\n13. *SERVIÇOS REMOTOS*\n\n *finalizar* para encerrar sessão " });                                
+                            
+                            }, 1000);
+                    
+                    } else if (message.body !== iniciocredito) {
+                    const userFieldHandle = await user.browserPage.$('#customfield440')
+                    setTimeout(async () => {
+                        await userFieldHandle.type(message.body)
+
+                        console.log("[ NEW ] EMAIL digitado: ", message.body);
+                        await venombot.sendText({ to: user.id, message: 'insira o nome da sua cidade' });
+                        user.setSamfrpStep(0);
+                        user.setSamfrpStep(7);
+                        
+                    }, 3000)
+            }
+                }
+
+                if(user.getSamfrpStep() === 7){
+                    
+                    if (message.body.toLowerCase() === iniciocredito) {
+                        console.log("[ PALAVRA CHAVE ] CHAVE digitado: ", message.body);
+                            await user.browserPage.goto("https://uniaodosunlockers.com.br/main");
+                            const primeiroElementoHandle = await user.browserPage.$('div > div > div.modal-header > button');
+                        
+                            setTimeout(async () => {
+                            
+                                    // Clicar no primeiro elemento
+                                    await primeiroElementoHandle.click();
+                                    console.log("Primeiro elemento clicado com sucesso!");
+                                    user.setSamfrpStep(0);
+                                    user.setLoginStep(3);
+                                    console.log("encaminhando");
+    
+                                }, 4000);
+    
+                             setTimeout(async () => {
+                                await user.browserPage.waitForSelector('body > div.bg-gray > div > div:nth-child(3) > div.client-area > div > div > div > div > div.row > div.col-lg-8.mb-4.bottom-space > div.row > div.col-md-6.col-left > div > div.d-row > h4 > span.counter');
+        
+                                const valor = await user.browserPage.$('body > div.bg-gray > div > div:nth-child(3) > div.client-area > div > div > div > div > div.row > div.col-lg-8.mb-4.bottom-space > div.row > div.col-md-6.col-left > div > div.d-row > h4 > span.counter');
+                                const valor1 = await user.browserPage.evaluate(element => element.textContent, valor);
+                                await venombot.sendText({ to: user.id, message: 'saldo: ' + valor1 });
+                                await venombot.sendText({ to: user.id, message: "Escolha uma opção:\n1. *COLOCAR CRÉDITOS*\n2. *UDU FLASH TOOL*\n3. *IKEY PRIME*\n4. *IREMOVAL PRO*\n5. *ATIVAÇÃO UNLOCKTOOL*\n6. *PHOENIX FRP*\n7. *XIAOMI DEFINITIVO 165 CREDITOS*\n8. *XIAOMI SEMI DEFINITIVO (REMOTO)*\n9. *SANSUNG FRP (REMOTO)*\n10. *SAM-FRP TOOL*\n\n  ---HISTORIOCO DE PEDIDOS---  \n\n11. *SERVIÇOS VIA IMEI | SN | ECID*\n12. *LINCEÇAS DE BOX E CREDITOS*\n13. *SERVIÇOS REMOTOS*\n\n *finalizar* para encerrar sessão " });                                
+                            
+                            }, 1000);
+                    
+                    } else if (message.body !== iniciocredito) {
+                    const userFieldHandle = await user.browserPage.$('#customfield442')
+                    setTimeout(async () => {
+                        await userFieldHandle.type(message.body)
+
+                        console.log("[ NEW ] CIDADE digitado: ", message.body);
+                        await venombot.sendText({ to: user.id, message: 'aguarde' });
+                        user.setSamfrpStep(0);
+                        await elementoPresente5();
+                        
+                    }, 3000)
+            }
+                }
+
+
+                if(user.getSamfrpStep() === 8){
+
+                    
+                    if (message.body.toLowerCase() === iniciocredito) {
+                        await venombot.sendText({ to: user.id, message: 'voltando ao inicio' });
+                        console.log("[ PALAVRA CHAVE ] CHAVE digitado: ", message.body);
+                        await user.browserPage.goto("https://uniaodosunlockers.com.br/main");
+                        const primeiroElementoHandle = await user.browserPage.$('div > div > div.modal-header > button');
+                    
+                        setTimeout(async () => {
+                        
+                                // Clicar no primeiro elemento
+                                await primeiroElementoHandle.click();
+                                console.log("Primeiro elemento clicado com sucesso!");
+                                user.setSamfrpStep(0);
+                                user.setLoginStep(3);
+                                console.log("encaminhando");
+
+                            }, 4000);
+
+                         setTimeout(async () => {
+                            await user.browserPage.waitForSelector('body > div.bg-gray > div > div:nth-child(3) > div.client-area > div > div > div > div > div.row > div.col-lg-8.mb-4.bottom-space > div.row > div.col-md-6.col-left > div > div.d-row > h4 > span.counter');
+    
+                            const valor = await user.browserPage.$('body > div.bg-gray > div > div:nth-child(3) > div.client-area > div > div > div > div > div.row > div.col-lg-8.mb-4.bottom-space > div.row > div.col-md-6.col-left > div > div.d-row > h4 > span.counter');
+                            const valor1 = await user.browserPage.evaluate(element => element.textContent, valor);
+                            await venombot.sendText({ to: user.id, message: 'saldo: ' + valor1 });
+                    await venombot.sendText({ to: user.id, message: "Escolha uma opção:\n1. *COLOCAR CRÉDITOS*\n2. *UDU FLASH TOOL*\n3. *IKEY PRIME*\n4. *IREMOVAL PRO*\n5. *ATIVAÇÃO UNLOCKTOOL*\n6. *PHOENIX FRP*\n7. *XIAOMI DEFINITIVO 165 CREDITOS*\n8. *XIAOMI SEMI DEFINITIVO (REMOTO)*\n9. *SANSUNG FRP (REMOTO)*\n10. *SAM-FRP TOOL*\n\n  ---HISTORIOCO DE PEDIDOS---  \n\n11. *SERVIÇOS VIA IMEI | SN | ECID*\n12. *LINCEÇAS DE BOX E CREDITOS*\n13. *SERVIÇOS REMOTOS*\n\n *finalizar* para encerrar sessão " });                        
+                        }, 1000);
+                    
+                    } else if (message.body !== iniciocredito) {
+
+                        if (!isNaN(message.body) && parseInt(message.body) < 12) {
+                            
+                            console.log("O número digitado é menor que 12.");
+
+                        await venombot.sendText({ to: user.id, message: 'mínimo de creditos menor que 12...\nreiniciando' });
+                        user.setSamfrpStep(0);
+                        await sam();
+
+                        } else {
+                            
+                    const elementoNumero = await user.browserPage.$('#ctotal');
+                    const numeroExtraido = await user.browserPage.evaluate(elemento => elemento.textContent, elementoNumero);
+
+                    const numeroDaPagina = parseFloat(numeroExtraido);
+                    const numeroDoUsuario = parseFloat(message.body);
+
+
+                        const userFieldHandle = await user.browserPage.$('#qnt')
+                    setTimeout(async () => {
+                        await userFieldHandle.type(message.body)
+
+                        console.log("[ CREDITOS ] VALOR digitado: ", message.body);
+                        
+                        if (userFieldHandle) {
+                            // Multiplica o valor da mensagem por 5.1
+                            const resultadoMultiplicacao = numeroDaPagina * numeroDoUsuario;
+    
+                            // Envia o resultado da multiplicação para o usuário
+                            await venombot.sendText({ to: user.id, message: `O valor total será: ${resultadoMultiplicacao}` });
+                            await venombot.sendText({ to: user.id, message: 'insira o nome de usuario desejado' });
+                            user.setSamfrpStep(0);
+                            user.setSamfrpStep(9);
+                        } else {
+                            console.error("Campo não encontrado na página.");
+                        }
+
+                        
+                        
+                    }, 3000)
+                            
+                            console.log("O número digitado não é menor que 12.");
+
+                            
+                        }
+
+                    }
+
+                }
+
+                if(user.getSamfrpStep() === 9){
+                    
+                    if (message.body.toLowerCase() === iniciocredito) {
+                        console.log("[ PALAVRA CHAVE ] CHAVE digitado: ", message.body);
+                            await user.browserPage.goto("https://uniaodosunlockers.com.br/main");
+                            const primeiroElementoHandle = await user.browserPage.$('div > div > div.modal-header > button');
+                        
+                            setTimeout(async () => {
+                            
+                                    // Clicar no primeiro elemento
+                                    await primeiroElementoHandle.click();
+                                    console.log("Primeiro elemento clicado com sucesso!");
+                                    user.setSamfrpStep(0);
+                                    user.setLoginStep(3);
+                                    console.log("encaminhando");
+    
+                                }, 4000);
+    
+                             setTimeout(async () => {
+                                await user.browserPage.waitForSelector('body > div.bg-gray > div > div:nth-child(3) > div.client-area > div > div > div > div > div.row > div.col-lg-8.mb-4.bottom-space > div.row > div.col-md-6.col-left > div > div.d-row > h4 > span.counter');
+        
+                                const valor = await user.browserPage.$('body > div.bg-gray > div > div:nth-child(3) > div.client-area > div > div > div > div > div.row > div.col-lg-8.mb-4.bottom-space > div.row > div.col-md-6.col-left > div > div.d-row > h4 > span.counter');
+                                const valor1 = await user.browserPage.evaluate(element => element.textContent, valor);
+                                await venombot.sendText({ to: user.id, message: 'saldo: ' + valor1 });
+                                await venombot.sendText({ to: user.id, message: "Escolha uma opção:\n1. *COLOCAR CRÉDITOS*\n2. *UDU FLASH TOOL*\n3. *IKEY PRIME*\n4. *IREMOVAL PRO*\n5. *ATIVAÇÃO UNLOCKTOOL*\n6. *PHOENIX FRP*\n7. *XIAOMI DEFINITIVO 165 CREDITOS*\n8. *XIAOMI SEMI DEFINITIVO (REMOTO)*\n9. *SANSUNG FRP (REMOTO)*\n10. *SAM-FRP TOOL*\n\n  ---HISTORIOCO DE PEDIDOS---  \n\n11. *SERVIÇOS VIA IMEI | SN | ECID*\n12. *LINCEÇAS DE BOX E CREDITOS*\n13. *SERVIÇOS REMOTOS*\n\n *finalizar* para encerrar sessão " });                                
+                            
+                            }, 1000);
+                    
+                    } else if (message.body !== iniciocredito) {
+                    const userFieldHandle = await user.browserPage.$('#customfield441')
+                    setTimeout(async () => {
+                        await userFieldHandle.type(message.body)
+
+                        console.log("[ USER ] USER digitado: ", message.body);
+                        user.setSamfrpStep(0);
+                        await elementoPresente5();
+                        
+                    }, 3000)
+            }
+                }
+
 
             }
 
@@ -1375,13 +2420,12 @@ export function initializeMessageHandler(venombot) {
                         const valor = await user.browserPage.$('body > div.bg-gray > div > div:nth-child(3) > div.client-area > div > div > div > div > div.row > div.col-lg-8.mb-4.bottom-space > div.row > div.col-md-6.col-left > div > div.d-row > h4 > span.counter');
                         const valor1 = await user.browserPage.evaluate(element => element.textContent, valor);
                         await venombot.sendText({ to: user.id, message: 'saldo: ' + valor1 });
-                        await venombot.sendText({ to: user.id, message: "Escolha uma opção:\n1. *COLOCAR CRÉDITOS*\n2. *UDU FLASH TOOL*\n3. *IKEY PRIME*\n4. *IREMOVAL PRO*\n5. *ATIVAÇÃO UNLOCKTOOL*\n6. *PHOENIX FRP*\n\n  ---HISTORIOCO DE PEDIDOS---  \n\n7. *SERVIÇOS VIA IMEI | SN | ECID*\n8. *LINCEÇAS DE BOX E CREDITOS* " });
-
+                                            await venombot.sendText({ to: user.id, message: "Escolha uma opção:\n1. *COLOCAR CRÉDITOS*\n2. *UDU FLASH TOOL*\n3. *IKEY PRIME*\n4. *IREMOVAL PRO*\n5. *ATIVAÇÃO UNLOCKTOOL*\n6. *PHOENIX FRP*\n7. *XIAOMI DEFINITIVO 165 CREDITOS*\n8. *XIAOMI SEMI DEFINITIVO (REMOTO)*\n9. *SANSUNG FRP (REMOTO)*\n10. *SAM-FRP TOOL*\n\n  ---HISTORIOCO DE PEDIDOS---  \n\n11. *SERVIÇOS VIA IMEI | SN | ECID*\n12. *LINCEÇAS DE BOX E CREDITOS*\n13. *SERVIÇOS REMOTOS*\n\n *finalizar* para encerrar sessão " });
                     }, 1000);
                     } else {
                         // Se o elemento não estiver presente, envie outra mensagem
                         console.log('Elemento não encontrado. Enviando outra mensagem...');
-                        await venombot.sendText({ to: user.id, message: 'solicitação feita com sucesso...\n verifique o status no historico.' });
+                        await venombot.sendText({ to: user.id, message: 'solicitação feita com sucesso...\nverifique o status no historico.' });
                         await venombot.sendText({ to: user.id, message: 'voltando ao inicio' });
                         user.setLoginStep(3);
                         await user.browserPage.goto("https://uniaodosunlockers.com.br/main");
@@ -1402,8 +2446,7 @@ export function initializeMessageHandler(venombot) {
                                 const valor = await user.browserPage.$('body > div.bg-gray > div > div:nth-child(3) > div.client-area > div > div > div > div > div.row > div.col-lg-8.mb-4.bottom-space > div.row > div.col-md-6.col-left > div > div.d-row > h4 > span.counter');
                                 const valor1 = await user.browserPage.evaluate(element => element.textContent, valor);
                                 await venombot.sendText({ to: user.id, message: 'saldo: ' + valor1 });
-                                await venombot.sendText({ to: user.id, message: "Escolha uma opção:\n1. *COLOCAR CRÉDITOS*\n2. *UDU FLASH TOOL*\n3. *IKEY PRIME*\n4. *IREMOVAL PRO*\n5. *ATIVAÇÃO UNLOCKTOOL*\n6. *PHOENIX FRP*\n\n  ---HISTORIOCO DE PEDIDOS---  \n\n7. *SERVIÇOS VIA IMEI | SN | ECID*\n8. *LINCEÇAS DE BOX E CREDITOS* " });
-        
+                                                    await venombot.sendText({ to: user.id, message: "Escolha uma opção:\n1. *COLOCAR CRÉDITOS*\n2. *UDU FLASH TOOL*\n3. *IKEY PRIME*\n4. *IREMOVAL PRO*\n5. *ATIVAÇÃO UNLOCKTOOL*\n6. *PHOENIX FRP*\n7. *XIAOMI DEFINITIVO 165 CREDITOS*\n8. *XIAOMI SEMI DEFINITIVO (REMOTO)*\n9. *SANSUNG FRP (REMOTO)*\n10. *SAM-FRP TOOL*\n\n  ---HISTORIOCO DE PEDIDOS---  \n\n11. *SERVIÇOS VIA IMEI | SN | ECID*\n12. *LINCEÇAS DE BOX E CREDITOS*\n13. *SERVIÇOS REMOTOS*\n\n *finalizar* para encerrar sessão " });        
                             }, 1000);
                     
                     }};
@@ -1426,18 +2469,18 @@ export function initializeMessageHandler(venombot) {
                     
 
                     await user.browserPage.waitForSelector('body > div.bg-gray > div > div:nth-child(3) > div.client-area > div > div > div > div > div.row > div.col-lg-8.mb-4.bottom-space > div.row > div.col-md-6.col-left > div > div.d-row > h4 > span.counter');
-                    const valor = await user.browserPage.$('body > div.bg-gray > div > div:nth-child(3) > div.client-area > div > div > div > div > div.row > div.col-lg-8.mb-4.bottom-space > div.row > div.col-md-6.col-left > div > div.d-row > h4 > span.counter');
+                    const valor  = await user.browserPage.$('body > div.bg-gray > div > div:nth-child(3) > div.client-area > div > div > div > div > div.row > div.col-lg-8.mb-4.bottom-space > div.row > div.col-md-6.col-left > div > div.d-row > h4 > span.counter');
                     const valor1 = await user.browserPage.evaluate(element => element.textContent, valor);
 
                     await user.browserPage.waitForSelector('div > div > div.modal-header.d-block.p-2 > div > div:nth-child(3) > strong');
-                    const textoElemento = await user.browserPage.$('div > div > div.modal-header.d-block.p-2 > div > div:nth-child(3) > strong');
-                    const textoExtraido = await user.browserPage.evaluate(element => element.textContent, textoElemento);
-                    const mensagemAntes = "*Seja bem-vindo*: ";
+                    const textoElemento    = await user.browserPage.$('div > div > div.modal-header.d-block.p-2 > div > div:nth-child(3) > strong');
+                    const textoExtraido    = await user.browserPage.evaluate(element => element.textContent, textoElemento);
+                    const mensagemAntes    = "*Seja bem-vindo*: ";
                     const mensagemCompleta = mensagemAntes + '\n' + textoExtraido + '\n' +' saldo: ' + valor1 ;
                     await venombot.sendText({ to: user.id, message: mensagemCompleta });
-                    await venombot.sendText({ to: user.id, message: "Escolha uma opção:\n1. *COLOCAR CRÉDITOS*\n2. *UDU FLASH TOOL*\n3. *IKEY PRIME*\n4. *IREMOVAL PRO*\n5. *ATIVAÇÃO UNLOCKTOOL*\n6. *PHOENIX FRP*\n\n  ---HISTORIOCO DE PEDIDOS---  \n\n7. *SERVIÇOS VIA IMEI | SN | ECID*\n8. *LINCEÇAS DE BOX E CREDITOS* " });
-                    user.setLoginStep(3);
-                    // Envia as opções disponíveis para o cliente após enviar a mensagem com o texto extraído
+                                        await venombot.sendText({ to: user.id, message: "Escolha uma opção:\n1. *COLOCAR CRÉDITOS*\n2. *UDU FLASH TOOL*\n3. *IKEY PRIME*\n4. *IREMOVAL PRO*\n5. *ATIVAÇÃO UNLOCKTOOL*\n6. *PHOENIX FRP*\n7. *XIAOMI DEFINITIVO 165 CREDITOS*\n8. *XIAOMI SEMI DEFINITIVO (REMOTO)*\n9. *SANSUNG FRP (REMOTO)*\n10. *SAM-FRP TOOL*\n\n  ---HISTORIOCO DE PEDIDOS---  \n\n11. *SERVIÇOS VIA IMEI | SN | ECID*\n12. *LINCEÇAS DE BOX E CREDITOS*\n13. *SERVIÇOS REMOTOS*\n\n *finalizar* para encerrar sessão " });                    user.setLoginStep(3);
+					
+                      // Envia as opções disponíveis para o cliente após enviar a mensagem com o texto extraído
                       
     
     
@@ -1470,7 +2513,7 @@ export function initializeMessageHandler(venombot) {
                 const click1 = await user.browserPage.$('#service_id_chosen');
                 setTimeout(async () => {
                 await click1.click({ button: 'left' });
-                await venombot.sendText({ to: user.id, message: 'Escolha uma opção:\n1- iOS 15/16 iPhone 8  /  8 Plus - *135* Crédito\n2- iOS 15/16 iPhone X - *180* Crédito\n3- iOS 15 iPads Celular - *97* Crédito\n4- iOS 15 iPhone 6S / 6S+ / SE 1st Gen (A1723) - *58* Crédito\n5- iOS 15 iPhone 7 / 7 Plus - *97* Crédito ' }) 
+                await venombot.sendText({ to: user.id, message: 'Escolha uma opção:\n1- iOS 15/16 iPhone 8  /  8 Plus - *135* Crédito\n2- iOS 15/16 iPhone X - *180* Crédito\n3- iOS 15 iPads Celular - *97* Crédito\n4- iOS 15 iPhone 6S / 6S+ / SE 1st Gen (A1723) - *58* Crédito\n5- iOS 15 iPhone 7 / 7 Plus - *97* Crédito*\n\n---digite *inicio* para voltar--- ' }) 
                 user.setIremovalStep(1);        
                 }, 2000);
             }
@@ -1482,7 +2525,7 @@ export function initializeMessageHandler(venombot) {
                 const click1 = await user.browserPage.$('#service_id_chosen');
                 setTimeout(async () => {
                 await click1.click({ button: 'left' });
-                await venombot.sendText({ to: user.id, message: 'Escolha uma opção:\n1- iPads 2017 a 2019 Com rede [SOMENTE IPAD COM CHIP] - 119 Crédito\n2- iPads entre 2013 e 2016 Com rede [SOMENTE IPAD COM CHIP] - 69 Crédito\n3- iPhone 5s | Meid & GSM Bypass Com Sinal - 32 Crédito\n4- iPhone 6/6+ | Meid & GSM Bypass Com Sinal - 59 Crédito\n5- iPhone 6s/6s+/SE | iOS 15/16 - 74 Crédito\n6- iPhone 7/7+ | iOS 15/16 - 110 Crédito\n7- iPhone 8/8+ | iOS 15/16 - 145 Crédito\n8- iPhone X | iOS 15/16 - 172 Crédito ' })                        
+                await venombot.sendText({ to: user.id, message: 'Escolha uma opção:\n1- iPads 2017 a 2019 Com rede [SOMENTE IPAD COM CHIP] - 119 Crédito\n2- iPads entre 2013 e 2016 Com rede [SOMENTE IPAD COM CHIP] - 69 Crédito\n3- iPhone 5s | Meid & GSM Bypass Com Sinal - 32 Crédito\n4- iPhone 6/6+ | Meid & GSM Bypass Com Sinal - 59 Crédito\n5- iPhone 6s/6s+/SE | iOS 15/16 - 74 Crédito\n6- iPhone 7/7+ | iOS 15/16 - 110 Crédito\n7- iPhone 8/8+ | iOS 15/16 - 145 Crédito\n8- iPhone X | iOS 15/16 - 172 Crédito\n\n---digite *inicio* para voltar--- ' })                        
                 user.setIkeyStep(1);
             }, 2000);
 
@@ -1507,7 +2550,7 @@ export function initializeMessageHandler(venombot) {
                 const click1 = await user.browserPage.$('#service_id_chosen');
                 setTimeout(async () => {
                 await click1.click({ button: 'left' });
-                await venombot.sendText({ to: user.id, message: 'Escolha uma opção:\n1- Ativação 1 ano / Renovação - 230 Crédito\n2- Ativação 3 meses / Renovação - 100 Crédito\n3- Ativação 6 meses / Renovação - 155 Crédito ' })               
+                await venombot.sendText({ to: user.id, message: 'Escolha uma opção:\n1- Ativação 1 ano / Renovação - 230 Crédito\n2- Ativação 3 meses / Renovação - 100 Crédito\n3- Ativação 6 meses / Renovação - 155 Crédito\n\n---digite *inicio* para voltar--- ' })               
                 user.setUnlockStep(1);
             }, 2000);
 
@@ -1517,7 +2560,7 @@ export function initializeMessageHandler(venombot) {
                 await user.browserPage.goto("https://uniaodosunlockers.com.br/orders/imei/status/all");
 
                 
-                const orders = await user.browserPage.$$('tr.status4, tr.status3'); // Seleciona todos os elementos <tr> com a classe status3
+                const orders = await user.browserPage.$$('tr.status1, tr.status2, tr.status3, tr.status4'); // Seleciona todos os elementos <tr> com a classe status3
 
 // Array para armazenar as informações das 5 primeiras orderid
 const firstFiveOrdersInfo = [];
@@ -1577,8 +2620,30 @@ STATUS: ${orderInfo.status}\n`;
 
 // Envie a mensagem para o usuário
 await venombot.sendText({ to: user.id, message: message });
-await venombot.sendText({ to: user.id, message: "digite *inicio* para voltar..." });
-user.setLoginStep(6);
+await venombot.sendText({ to: user.id, message: 'voltando ao inicio' });
+                        console.log("[ PALAVRA CHAVE ] CHAVE digitado: ", message.body);
+                        await user.browserPage.goto("https://uniaodosunlockers.com.br/main");
+                        const primeiroElementoHandle = await user.browserPage.$('div > div > div.modal-header > button');
+                    
+                        setTimeout(async () => {
+                        
+                                // Clicar no primeiro elemento
+                                await primeiroElementoHandle.click();
+                                console.log("Primeiro elemento clicado com sucesso!");
+                                user.setUnlockStep(0);
+                                user.setLoginStep(3);
+                                console.log("encaminhando");
+
+                            }, 4000);
+
+                         setTimeout(async () => {
+                            await user.browserPage.waitForSelector('body > div.bg-gray > div > div:nth-child(3) > div.client-area > div > div > div > div > div.row > div.col-lg-8.mb-4.bottom-space > div.row > div.col-md-6.col-left > div > div.d-row > h4 > span.counter');
+    
+                            const valor = await user.browserPage.$('body > div.bg-gray > div > div:nth-child(3) > div.client-area > div > div > div > div > div.row > div.col-lg-8.mb-4.bottom-space > div.row > div.col-md-6.col-left > div > div.d-row > h4 > span.counter');
+                            const valor1 = await user.browserPage.evaluate(element => element.textContent, valor);
+                            await venombot.sendText({ to: user.id, message: 'saldo: ' + valor1 });
+                    await venombot.sendText({ to: user.id, message: "Escolha uma opção:\n1. *COLOCAR CRÉDITOS*\n2. *UDU FLASH TOOL*\n3. *IKEY PRIME*\n4. *IREMOVAL PRO*\n5. *ATIVAÇÃO UNLOCKTOOL*\n6. *PHOENIX FRP*\n7. *XIAOMI DEFINITIVO 165 CREDITOS*\n8. *XIAOMI SEMI DEFINITIVO (REMOTO)*\n9. *SANSUNG FRP (REMOTO)*\n10. *SAM-FRP TOOL*\n\n  ---HISTORIOCO DE PEDIDOS---  \n\n11. *SERVIÇOS VIA IMEI | SN | ECID*\n12. *LINCEÇAS DE BOX E CREDITOS*\n13. *SERVIÇOS REMOTOS*\n\n *finalizar* para encerrar sessão " });                        
+                        }, 1000);;
             }
 
             async function box() {
@@ -1590,7 +2655,7 @@ user.setLoginStep(6);
                     const tbody = await user.browserPage.$('tbody');
 
                     if (tbody) {
-                        const orders = await tbody.$$('tr.status3, tr.status4');
+                        const orders = await tbody.$$('tr.status1, tr.status2, tr.status3, tr.status4');
                     
                         const firstFiveOrdersInfo = [];
                     
@@ -1639,14 +2704,147 @@ user.setLoginStep(6);
 
                     // Enviando a mensagem para o usuário
                     await venombot.sendText({ to: user.id, message: message });
-                    await venombot.sendText({ to: user.id, message: "digite *inicio* para voltar..." });
-                    user.setLoginStep(6);
+                    await venombot.sendText({ to: user.id, message: 'voltando ao inicio' });
+                        console.log("[ PALAVRA CHAVE ] CHAVE digitado: ", message.body);
+                        await user.browserPage.goto("https://uniaodosunlockers.com.br/main");
+                        const primeiroElementoHandle = await user.browserPage.$('div > div > div.modal-header > button');
+                    
+                        setTimeout(async () => {
+                        
+                                // Clicar no primeiro elemento
+                                await primeiroElementoHandle.click();
+                                console.log("Primeiro elemento clicado com sucesso!");
+                                user.setUnlockStep(0);
+                                user.setLoginStep(3);
+                                console.log("encaminhando");
+
+                            }, 4000);
+
+                         setTimeout(async () => {
+                            await user.browserPage.waitForSelector('body > div.bg-gray > div > div:nth-child(3) > div.client-area > div > div > div > div > div.row > div.col-lg-8.mb-4.bottom-space > div.row > div.col-md-6.col-left > div > div.d-row > h4 > span.counter');
+    
+                            const valor = await user.browserPage.$('body > div.bg-gray > div > div:nth-child(3) > div.client-area > div > div > div > div > div.row > div.col-lg-8.mb-4.bottom-space > div.row > div.col-md-6.col-left > div > div.d-row > h4 > span.counter');
+                            const valor1 = await user.browserPage.evaluate(element => element.textContent, valor);
+                            await venombot.sendText({ to: user.id, message: 'saldo: ' + valor1 });
+                    await venombot.sendText({ to: user.id, message: "Escolha uma opção:\n1. *COLOCAR CRÉDITOS*\n2. *UDU FLASH TOOL*\n3. *IKEY PRIME*\n4. *IREMOVAL PRO*\n5. *ATIVAÇÃO UNLOCKTOOL*\n6. *PHOENIX FRP*\n7. *XIAOMI DEFINITIVO 165 CREDITOS*\n8. *XIAOMI SEMI DEFINITIVO (REMOTO)*\n9. *SANSUNG FRP (REMOTO)*\n10. *SAM-FRP TOOL*\n\n  ---HISTORIOCO DE PEDIDOS---  \n\n11. *SERVIÇOS VIA IMEI | SN | ECID*\n12. *LINCEÇAS DE BOX E CREDITOS*\n13. *SERVIÇOS REMOTOS*\n\n *finalizar* para encerrar sessão " });                        
+                        }, 1000);
                     
 
                     
                 } }, 2000);
             }
-          
+
+            async function remote() {
+                
+                await user.browserPage.goto("https://uniaodosunlockers.com.br/orders/action/remote/status/all");
+
+                setTimeout(async () => {
+
+                    const tbody = await user.browserPage.$('tbody');
+
+                    if (tbody) {
+                        const orders = await tbody.$$('tr.status0, tr.status1, tr.status2, tr.status3, tr.status4');
+                    
+                        const firstFiveOrdersInfo = [];
+                    
+                        for (let i = 0; i < orders.length && firstFiveOrdersInfo.length < 5; i++) {
+                            const order = orders[i];
+                    
+                            const orderIdElement = await order.$('.col-orderid input[type="hidden"]');
+                            const orderId = await (await orderIdElement.getProperty('value')).jsonValue();
+                    
+                            const orderStatusElement = await order.$('.order-status span');
+                            const orderStatus = await (await orderStatusElement.getProperty('textContent')).jsonValue();
+                    
+                            const orderServiceElement = await order.$('td:nth-child(3) div');
+                            const orderService = await (await orderServiceElement.getProperty('textContent')).jsonValue();
+                    
+                            const orderCreditElement = await order.$('.col-credit div');
+                            const orderCredit = await (await orderCreditElement.getProperty('textContent')).jsonValue();
+                    
+                            const orderDateElement = await order.$('.col-date div');
+                            const orderDate = await (await orderDateElement.getProperty('textContent')).jsonValue();
+                    
+                            const orderInfo = {
+                                orderId: orderId,
+                                orderStatus: orderStatus.trim(), // Remove espaços extras
+                                orderService: orderService.trim(), // Remove espaços extras
+                                orderCredit: orderCredit.trim(), // Remove espaços extras
+                                orderDate: orderDate.trim(), // Remove espaços extras
+                            };
+                    
+                            firstFiveOrdersInfo.push(orderInfo);
+                        }
+
+                    // Preparando as informações para envio
+                    let message = 'As informações das primeiras 5 ordens:\n';
+
+                    for (const orderInfo of firstFiveOrdersInfo) {
+                        const statusWithAsterisks = `*${orderInfo.orderStatus.trim()}*`;
+                        message += `
+                Order ID: ${orderInfo.orderId}
+                Status do Serviço: *${statusWithAsterisks}*
+                Serviço: ${orderInfo.orderService}
+                Crédito: ${orderInfo.orderCredit}
+                Data: ${orderInfo.orderDate}
+                \n`;
+                    }
+
+                    // Enviando a mensagem para o usuário
+                    await venombot.sendText({ to: user.id, message: message });
+                    await venombot.sendText({ to: user.id, message: 'voltando ao inicio' });
+                        console.log("[ PALAVRA CHAVE ] CHAVE digitado: ", message.body);
+                        await user.browserPage.goto("https://uniaodosunlockers.com.br/main");
+                        const primeiroElementoHandle = await user.browserPage.$('div > div > div.modal-header > button');
+                    
+                        setTimeout(async () => {
+                        
+                                // Clicar no primeiro elemento
+                                await primeiroElementoHandle.click();
+                                console.log("Primeiro elemento clicado com sucesso!");
+                                user.setUnlockStep(0);
+                                user.setLoginStep(3);
+                                console.log("encaminhando");
+
+                            }, 4000);
+
+                         setTimeout(async () => {
+                            await user.browserPage.waitForSelector('body > div.bg-gray > div > div:nth-child(3) > div.client-area > div > div > div > div > div.row > div.col-lg-8.mb-4.bottom-space > div.row > div.col-md-6.col-left > div > div.d-row > h4 > span.counter');
+    
+                            const valor = await user.browserPage.$('body > div.bg-gray > div > div:nth-child(3) > div.client-area > div > div > div > div > div.row > div.col-lg-8.mb-4.bottom-space > div.row > div.col-md-6.col-left > div > div.d-row > h4 > span.counter');
+                            const valor1 = await user.browserPage.evaluate(element => element.textContent, valor);
+                            await venombot.sendText({ to: user.id, message: 'saldo: ' + valor1 });
+                    await venombot.sendText({ to: user.id, message: "Escolha uma opção:\n1. *COLOCAR CRÉDITOS*\n2. *UDU FLASH TOOL*\n3. *IKEY PRIME*\n4. *IREMOVAL PRO*\n5. *ATIVAÇÃO UNLOCKTOOL*\n6. *PHOENIX FRP*\n7. *XIAOMI DEFINITIVO 165 CREDITOS*\n8. *XIAOMI SEMI DEFINITIVO (REMOTO)*\n9. *SANSUNG FRP (REMOTO)*\n10. *SAM-FRP TOOL*\n\n  ---HISTORIOCO DE PEDIDOS---  \n\n11. *SERVIÇOS VIA IMEI | SN | ECID*\n12. *LINCEÇAS DE BOX E CREDITOS*\n13. *SERVIÇOS REMOTOS*\n\n *finalizar* para encerrar sessão " });                        
+                        }, 1000);
+                    
+
+                    
+                } }, 2000);
+            }
+
+            async function samsung() {
+                await user.browserPage.goto("https://uniaodosunlockers.com.br/resellerplaceorder/remote");
+               
+                const click1 = await user.browserPage.$('#service_id_chosen');
+                setTimeout(async () => {
+                await click1.click({ button: 'left' });
+                await venombot.sendText({ to: user.id, message: 'Escolha uma opção:\n1- DESBLOQUEIO MDM SAMSUNG - 160 Crédito\n2- FRP SAMSUNG - 80 Crédito\n3- SAMSUNG FRP (CONSULTAR MODELOS SUPORTADOS DIGITE *CONSUL*) - 50 Crédito\n\n---digite *inicio* para voltar--- ' })                        
+                user.setSamsungStep(1);
+            }, 2000);
+            }
+            
+            async function sam() {
+                await user.browserPage.goto("https://uniaodosunlockers.com.br/resellerplaceorder/server");
+               
+                const click1 = await user.browserPage.$('#service_id_chosen');
+                setTimeout(async () => {
+                await click1.click({ button: 'left' });
+                await venombot.sendText({ to: user.id, message: 'Escolha uma opção:\n1- Sam-Frp Tool Créditos [Criar Novo Usuário]\n2- SAM-FRP Tool Créditos [Usuário Existente]\n\n---digite *inicio* para voltar--- ' })               
+                user.setSamfrpStep(1);
+            }, 2000);
+            }
+
+            
         }
     });
 
